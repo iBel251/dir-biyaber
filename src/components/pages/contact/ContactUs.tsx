@@ -18,15 +18,19 @@ const App: React.FC = () => {
       <main className="container mx-auto px-4 py-12">
         {/* Hero Section */}
         <div className="relative mb-16 rounded-xl overflow-hidden shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-400 opacity-90"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-400 opacity-70"></div>
           <img 
-            src="https://public.readdy.ai/ai/img_res/52c51849ebb59fc14dbedb03763c6e20.jpg" 
+            src="/images/office.jpg" 
             alt="Contact Us Hero" 
-            className="w-full h-64 object-cover object-top"
+            className="w-full h-64 object-cover object-center"
           />
           <div className="absolute inset-0 flex flex-col justify-center items-center px-8 md:px-16">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 text-center">Contact Us</h1>
-            <p className="text-white text-lg md:text-xl max-w-2xl text-center">We'd love to hear from you. Reach out to our team with any questions, feedback, or inquiries you may have.</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 text-center drop-shadow-lg">
+              Contact Us
+            </h1>
+            <p className="text-white text-lg md:text-xl max-w-2xl text-center leading-relaxed drop-shadow-md">
+              We'd love to hear from you. Reach out to our team with any questions, feedback, or inquiries you may have.
+            </p>
           </div>
         </div>
 

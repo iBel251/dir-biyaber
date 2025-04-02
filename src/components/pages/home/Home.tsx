@@ -1,6 +1,7 @@
 // The exported code uses Tailwind CSS. Install Tailwind CSS in your dev environment to ensure all styles work.
 
 import React, { useState, useEffect } from 'react';
+import { Link } from "react-router-dom";
 import Hero from './Hero';
 
 const App: React.FC = () => {
@@ -92,9 +93,6 @@ const App: React.FC = () => {
               <p className="text-gray-600 text-lg mb-8 leading-relaxed">
                 Headquartered at 1400 S Hayworth Avenue 207 in Los Angeles, CA 90035, our mission is to provide financial aid to cover funeral expenses, alleviating the financial burden on families during such difficult times.
               </p>
-              <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors duration-300 font-medium cursor-pointer !rounded-button whitespace-nowrap">
-                Our Story
-              </button>
             </div>
             <div className="md:w-1/2 initially-hidden">
               <div className="rounded-2xl overflow-hidden shadow-xl">
@@ -145,10 +143,16 @@ const App: React.FC = () => {
             Become part of something meaningful.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 initially-hidden">
-            <button className="bg-white text-orange-500 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 cursor-pointer !rounded-button whitespace-nowrap">
+            <Link 
+              to="/contact-us" 
+              className="bg-white text-orange-500 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 cursor-pointer !rounded-button whitespace-nowrap"
+            >
               Become a Member
-            </button>
-            <button className="bg-transparent border-2 border-white hover:bg-white/10 px-8 py-3 rounded-lg text-lg font-medium transition-all duration-300 cursor-pointer !rounded-button whitespace-nowrap">
+            </Link>
+            <button 
+              className="bg-transparent border-2 border-white hover:bg-white/10 px-8 py-3 rounded-lg text-lg font-medium transition-all duration-300 cursor-pointer !rounded-button whitespace-nowrap"
+              onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               Learn More
             </button>
           </div>
