@@ -97,7 +97,7 @@ const App: React.FC = () => {
             <div className="md:w-1/2 initially-hidden">
               <div className="rounded-2xl overflow-hidden shadow-xl">
                 <img 
-                  src="https://public.readdy.ai/ai/img_res/f6840c602cf93a66997c94afa3d7f30c.jpg" 
+                  src="/images/officeArgawBelay.jpg" 
                   alt="Dirbyaber Community Members" 
                   className="w-full h-full object-cover object-top"
                 />

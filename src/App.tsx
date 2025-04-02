@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'; // Import routing components
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'; // Import useLocation
 import Navigation from './components/Navigation';
 import Home from './components/pages/home/Home';
 import About from './components/pages/about/About';
@@ -18,8 +18,17 @@ function App() {
     localStorage.setItem("preferredLanguage", lang); // Persist language
   };
 
+  const ScrollToTop = () => {
+    const location = useLocation(); // Get the current location
+    useEffect(() => {
+      window.scrollTo(0, 0); // Scroll to the top on route change
+    }, [location]); // Run effect when location changes
+    return null; // This component doesn't render anything
+  };
+
   return (
     <Router>
+      <ScrollToTop /> {/* Add ScrollToTop component */}
       <div className="App">
         <Navigation onLanguageChange={handleLanguageChange} />
         <div className="content"> {/* Add a wrapper with a class */}

@@ -140,11 +140,8 @@ const App: React.FC = () => {
                 </div>
                 <span className="text-xs text-gray-500 mb-2">{obituary.id}</span>
                 <h3 className="text-xl font-semibold text-gray-800 text-center mb-1">{obituary.name}</h3>
+                <h4 className="text-lg font-medium text-gray-600 text-center mb-3">{obituary.name2}</h4>
                 <p className="text-gray-600 mb-3 text-center">{obituary.dates}</p>
-                <p className="text-gray-600 text-sm text-center mb-6">{obituary.details}</p>
-                <button className="mt-auto px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm transition-colors duration-300 !rounded-button whitespace-nowrap cursor-pointer">
-                  Send Condolences
-                </button>
               </div>
             ))}
           </div>

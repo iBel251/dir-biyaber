@@ -5,7 +5,7 @@ const Hero: React.FC = () => {
   return (
     <section className="relative flex items-center justify-center overflow-hidden" style={{
       height: 'calc(100vh - 3.5rem)', // Adjust height to account for the nav
-      backgroundImage: `url('/images/office.jpg')`,
+      backgroundImage: `url('/images/officeNew.jpg')`,
       backgroundSize: 'cover',
       backgroundPosition: 'center'
     }}>
