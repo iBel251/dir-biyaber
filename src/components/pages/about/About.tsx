@@ -10,7 +10,14 @@ const App: React.FC<{ language: string }> = ({ language }) => {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             {language === "en" ? "About Dir Biyaber Edir" : "ስለ ድርቢያብር እድር"}
           </h1>
-          <div className="w-24 h-1 bg-indigo-600 mx-auto mb-8"></div>
+          <div className="w-24 h-1 bg-indigo-600 mx-auto mb-4"></div>
+          <div className="mb-4">
+            <img
+              src="/images/logonew.jpg"
+              alt="Dir Biyaber Edir Logo"
+              className="mx-auto w-48 h-auto"
+            />
+          </div>
         </div>
 
         {/* About Text Section */}

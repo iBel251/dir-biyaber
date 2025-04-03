@@ -7,9 +7,12 @@ const Hero: React.FC = () => {
       height: 'calc(100vh - 3.5rem)', // Adjust height to account for the nav
       backgroundImage: `url('/images/officeNew.jpg')`,
       backgroundSize: 'cover',
-      backgroundPosition: 'center'
+      backgroundPosition: 'center',
+      filter: 'brightness(1.2)' // Increase brightness
     }}>
-      <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 to-gray-900/30"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 to-gray-900/30" style={{
+        opacity: 0.6 // Decrease overlay opacity
+      }}></div>
       <div className="absolute" style={{
         top: '65%', // Explicitly move down
         left: '-10%', // Keep it aligned to the left

@@ -3,16 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import Hero from './Hero';
+import LatestDeceased from './LatestDeceased';
 
 const App: React.FC = () => {
-  // Mock data for community statistics
-  const communityStats = [
-    { id: 1, count: 150, label: 'Families Supported' },
-    { id: 2, count: 10, label: 'Years of Service' },
-    { id: 3, count: 1500, label: 'Active Members' },
-    // { id: 4, count: 207, label: 'Suite Number' }
-  ];
-
   // Mock data for community highlights
   const communityHighlights = [
     {
@@ -41,6 +34,11 @@ const App: React.FC = () => {
     }
   ];
 
+  const latestDeceased = {
+    name: 'DESSALEGN WOLDE MARIAM',
+    dateOfPassing: 'April 1, 2025',
+  };
+
   // Animation for elements when they come into view
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -62,22 +60,16 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
       {/* Navigation */}
-      
 
       {/* Hero Section */}
       <Hero />
 
-      {/* Stats Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-items-center">
-            {communityStats.map(stat => (
-              <div key={stat.id} className="text-center">
-                <p className="text-4xl md:text-5xl font-bold text-orange-500 mb-2">{stat.count}+</p>
-                <p className="text-gray-600 text-lg">{stat.label}</p>
-              </div>
-            ))}
-          </div>
+      {/* Main Header */}
+      <section className="py-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-orange-500">
+               የድር ቢያብር ዕድር መረዳጃ ማህበር ድህረ ገጽ
+          </h1>
         </div>
       </section>
 
@@ -107,10 +99,14 @@ const App: React.FC = () => {
         </div>
       </section>
 
+      {/* Latest Deceased Section */}
+      <LatestDeceased person={latestDeceased} />
+
+
       {/* Community Highlights */}
-      <section id="highlights" className="py-20 bg-white">
+      <section id="highlights" className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 initially-hidden">
+          <div className="text-center mb-12 initially-hidden">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-800">Community Highlights</h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
               Learn more about how Dir Biyaber Edir is making a difference by supporting families in need and fostering a sense of community.

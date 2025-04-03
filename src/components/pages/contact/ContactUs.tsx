@@ -72,27 +72,10 @@ const App: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-gray-600 font-medium">Business Hours</h3>
-                    <p className="text-gray-700">Monday - Friday: 9AM - 5PM</p>
+                    <p className="text-gray-700">Monday - Friday: 9AM - 3PM</p>
                     <p className="text-gray-700">Saturday - Sunday: Closed</p>
                   </div>
                 </div>
-              </div>
-            </div>
-            
-            {/* Social Media */}
-            <div className="bg-white rounded-xl shadow-md p-8">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Follow Us</h2>
-              <div className="flex justify-center space-x-4">
-                {socialLinks.map((link, index) => (
-                  <a 
-                    key={index}
-                    href="#" 
-                    className="bg-indigo-100 hover:bg-indigo-200 text-indigo-600 p-3 rounded-full transition duration-300 cursor-pointer"
-                    aria-label={link.name}
-                  >
-                    <i className={`fab ${link.icon}`}></i>
-                  </a>
-                ))}
               </div>
             </div>
           </div>
