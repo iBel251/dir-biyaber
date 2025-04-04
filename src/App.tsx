@@ -6,6 +6,7 @@ import About from './components/pages/about/About';
 import ContactUs from './components/pages/contact/ContactUs'; // Import the ContactUs component
 import Obituary from './components/pages/obituary/Obituary'; // Import the Obituary component
 import Bylaws from './components/pages/bylaws/bylaws'; // Import the Bylaws component
+import Admin from './components/pages/admin/AdminLogin'; // Import the Admin component
 import Footer from './components/Footer';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './App.css'; // Import the CSS file for styling
@@ -38,6 +39,7 @@ function App() {
             <Route path="/contact-us" element={<ContactUs />} /> {/* Contact Us route */}
             <Route path="/obituary" element={<Obituary />} /> {/* Obituary route */}
             <Route path="/bylaws" element={<Bylaws />} /> {/* Bylaws route */}
+            <Route path="/adminLogin" element={<Admin />} /> {/* Admin route */}
           </Routes>
         </div>
         <Footer />

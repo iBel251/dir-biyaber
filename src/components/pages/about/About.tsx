@@ -33,7 +33,7 @@ const App: React.FC<{ language: string }> = ({ language }) => {
         {/* Team Section */}
         <div className="mb-20">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            Our Team
+            Board Members
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {teamMembers.map((member) => (
@@ -46,7 +46,7 @@ const App: React.FC<{ language: string }> = ({ language }) => {
                     <img
                       src={member.imageUrl}
                       alt={`${member.name}, ${member.role}`}
-                      className="w-full h-full object-cover object-top"
+                      className="w-full h-full object-contain object-center"
                     />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-1">
