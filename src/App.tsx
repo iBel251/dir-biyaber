@@ -8,6 +8,7 @@ import Obituary from './components/pages/obituary/Obituary'; // Import the Obitu
 import Bylaws from './components/pages/bylaws/bylaws'; // Import the Bylaws component
 import Admin from './components/pages/admin/AdminLogin'; // Import the Admin component
 import Footer from './components/Footer';
+import Portal from './components/pages/admin/Portal'
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './App.css'; // Import the CSS file for styling
 
@@ -40,6 +41,7 @@ function App() {
             <Route path="/obituary" element={<Obituary />} /> {/* Obituary route */}
             <Route path="/bylaws" element={<Bylaws />} /> {/* Bylaws route */}
             <Route path="/adminLogin" element={<Admin />} /> {/* Admin route */}
+            <Route path="/portal" element={<Portal />} /> {/* Admin route */}
           </Routes>
         </div>
         <Footer />

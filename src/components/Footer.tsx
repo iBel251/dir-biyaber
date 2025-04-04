@@ -37,7 +37,7 @@ const Footer: React.FC = () => {
               </li>
               <li className="flex justify-center items-center">
                 <i className="fas fa-envelope mr-3 text-orange-400"></i>
-                <span>info@dirbyaber.com</span>
+                <span>dirbiyaber@gmail.com</span>
               </li>
             </ul>
           </div>

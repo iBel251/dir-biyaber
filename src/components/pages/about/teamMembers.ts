@@ -41,4 +41,10 @@ export const teamMembers = [
     role: "Director",
     imageUrl: "/images/profile.png",
   },
+  {
+    id: 8,
+    name: "Solomon Asrat",
+    role: "Public Relations",
+    imageUrl: "/images/solomon.jpg",
+  },
 ];

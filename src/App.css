@@ -37,7 +37,14 @@
   }
 }
 
+.navigation {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 10000; /* Ensure it stays above other elements */
+}
+
 .content {
-  padding-top: 60px; /* Adjust this value based on the height of your navbar */
+  padding-top: 60px; /* Increase to ensure content is positioned below the navigation */
 }
 

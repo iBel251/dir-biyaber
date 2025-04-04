@@ -72,6 +72,7 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
             >
               Contact Us
             </Link>
+
             <div className="relative flex items-center space-x-2">
               <i className="fas fa-globe text-gray-700"></i> {/* Icon for language selection */}
               <Select
@@ -138,6 +139,15 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
               }`}
             >
               Contact Us
+            </Link>
+            <Link
+              to="/portal"
+              onClick={() => setIsMenuOpen(false)}
+              className={`block px-4 py-2 text-gray-700 hover:text-orange-500 transition-colors duration-300 ${
+                location.pathname === "/portal" ? "font-bold text-orange-500 underline underline-offset-4" : ""
+              }`}
+            >
+              Portal
             </Link>
             <div className="relative flex items-center px-4 py-2">
               <i className="fas fa-globe text-gray-700 mr-2"></i>

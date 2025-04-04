@@ -52,7 +52,7 @@ const App: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-gray-600 font-medium">Email</h3>
-                    <a href="mailto:contact@dirbyaber.com" className="text-indigo-600 hover:text-indigo-800 transition duration-300">contact@dirbyaber.com</a>
+                    <a href="mailto:dirbiyaber@gmail.com" className="text-indigo-600 hover:text-indigo-800 transition duration-300">dirbiyaber@gmail.com</a>
                   </div>
                 </div>
                 
