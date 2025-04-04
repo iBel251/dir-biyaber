@@ -9,7 +9,7 @@ export const teamMembers = [
     id: 2,
     name: "Argaw Belay",
     role: "Vice President",
-    imageUrl: "/images/tsehayframe.jpg",
+    imageUrl: "/images/profile.png",
   },
   {
     id: 3,
@@ -27,7 +27,7 @@ export const teamMembers = [
     id: 5,
     name: "Asfaw Woldeyes",
     role: "Auditor",
-    imageUrl: "/images/fasikaframe.jpg",
+    imageUrl: "/images/profile.png",
   },
   {
     id: 6,

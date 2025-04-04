@@ -31,7 +31,7 @@ const App: React.FC<{ language: string }> = ({ language }) => {
         </div>
 
         {/* Team Section */}
-        <div className="mb-20">
+        <div className="mb-10">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
             Board Members
           </h2>
@@ -39,20 +39,20 @@ const App: React.FC<{ language: string }> = ({ language }) => {
             {teamMembers.map((member) => (
               <div
                 key={member.id}
-                className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1"
+                className="bg-white shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1"
               >
-                <div className="p-8 flex flex-col items-center text-center">
-                  <div className="w-40 h-40 rounded-full overflow-hidden mb-6">
+                <div className="p-4 flex flex-col items-center text-center">
+                  <div className="w-50 h-50 rounded-full overflow-hidden mb-4">
                     <img
                       src={member.imageUrl}
                       alt={`${member.name}, ${member.role}`}
-                      className="w-full h-full object-contain object-center"
+                      className="w-full h-full object-cover object-center"
                     />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-1">
                     {member.name}
                   </h3>
-                  <p className="text-indigo-600 font-medium mb-3">
+                  <p className="text-indigo-600 font-medium mb-2">
                     {member.role}
                   </p>
                 </div>
