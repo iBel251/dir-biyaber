@@ -1,17 +1,26 @@
 // The exported code uses Tailwind CSS. Install Tailwind CSS in your dev environment to ensure all styles work.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { login } from '../../../firebase/authService'; // Import the login function
+import { login, getCurrentUser, resetPassword } from '../../../firebase/authService'; // Import the login function, getCurrentUser, and resetPassword
 
 const App: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
   const navigate = useNavigate(); // Initialize useNavigate
+
+  useEffect(() => {
+    const user = getCurrentUser(); // Check if the user is already logged in
+    if (user) {
+      navigate('/portal'); // Redirect to /portal if logged in
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +37,6 @@ const App: React.FC = () => {
         await login(email, password); // Call the login function
         console.log('Login successful');
         navigate('/portal'); // Navigate to /portal on success
-        // Redirect or perform further actions after successful login
     } catch (error: any) {
         if (error.code === 'auth/user-not-found') {
             setError('No user found with this email.');
@@ -36,11 +44,33 @@ const App: React.FC = () => {
             setError('Incorrect password. Please try again.');
         } else if (error.code === 'auth/too-many-requests') {
             setError('Too many login attempts. Please try again later.');
+        } else if (error.code === 'auth/invalid-email') {
+            setError('Invalid email format. Please check and try again.');
+        } else if (error.code === 'auth/invalid-credential') {
+            setError('Invalid email or password. Please check your credentials and try again.');
         } else {
-            setError('An unexpected error occurred. Please try again.');
+            setError('An error occurred. Please check your inputs and try again.');
         }
     } finally {
         setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setResetMessage('');
+    if (!resetEmail) {
+        setResetMessage('Please enter your email address.');
+        return;
+    }
+    try {
+        await resetPassword(resetEmail);
+        setResetMessage('If an account with this email exists, a password reset email has been sent.');
+    } catch (error: any) {
+        if (error.code === 'auth/invalid-email') {
+            setResetMessage('Invalid email format. Please check and try again.');
+        } else {
+            setResetMessage('An error occurred. Please check your inputs and try again.');
+        }
     }
   };
 
@@ -113,22 +143,14 @@ const App: React.FC = () => {
             </div>
             
             <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                  checked={rememberMe}
-                  onChange={() => setRememberMe(!rememberMe)}
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me
-                </label>
-              </div>
               <div className="text-sm">
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                <button
+                  type="button"
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                  onClick={() => setIsForgotPasswordOpen(true)}
+                >
                   Forgot password?
-                </a>
+                </button>
               </div>
             </div>
             
@@ -168,15 +190,42 @@ const App: React.FC = () => {
           <p className="text-xs text-gray-500 mb-2">
             This portal is monitored and secured. Unauthorized access attempts will be logged.
           </p>
-          
-          <div className="text-xs text-gray-500">
-            <span>Need help? </span>
-            <a href="#" className="text-blue-600 hover:underline">Contact IT Support</a>
-            <span> • </span>
-            <span>© {new Date().getFullYear()} Company Name. All rights reserved.</span>
-          </div>
         </div>
       </div>
+
+      {isForgotPasswordOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h2 className="text-lg font-bold mb-4">Reset Password</h2>
+            {resetMessage && (
+              <div className={`p-3 rounded-md mb-4 text-sm ${resetMessage.includes('successfully') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                {resetMessage}
+              </div>
+            )}
+            <input
+              type="email"
+              className="block w-full p-2 border border-gray-300 rounded-md mb-4"
+              placeholder="Enter your email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded-md text-sm"
+                onClick={() => setIsForgotPasswordOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm"
+                onClick={handleForgotPassword}
+              >
+                Send Reset Email
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

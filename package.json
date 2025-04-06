@@ -15,12 +15,14 @@
     "firebase": "^11.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-helmet": "^6.1.0",
     "react-router-dom": "^7.4.1",
     "react-scripts": "^5.0.1",
     "react-select": "^5.10.1",
     "swiper": "^11.2.6",
     "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "zustand": "^5.0.3"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -49,6 +51,7 @@
   "devDependencies": {
     "@types/echarts": "^4.9.22",
     "@types/react": "^19.0.12",
+    "@types/react-helmet": "^6.1.11",
     "@types/react-world-flags": "^1.6.0",
     "@types/swiper": "^5.4.3",
     "autoprefixer": "^10.4.21",
