@@ -30,22 +30,29 @@ function App() {
 
   return (
     <Router>
-      <ScrollToTop /> {/* Add ScrollToTop component */}
-      <div className="App">
-        <Navigation onLanguageChange={handleLanguageChange} />
-        <div className="content"> {/* Add a wrapper with a class */}
-          <Routes>
-            <Route path="/" element={<Home />} /> {/* Home route */}
-            <Route path="/about" element={<About language={language} />} /> {/* Pass language to About */}
-            <Route path="/contact-us" element={<ContactUs />} /> {/* Contact Us route */}
-            <Route path="/obituary" element={<Obituary />} /> {/* Obituary route */}
-            <Route path="/bylaws" element={<Bylaws />} /> {/* Bylaws route */}
-            <Route path="/adminLogin" element={<Admin />} /> {/* Admin route */}
-            <Route path="/portal" element={<Portal />} /> {/* Admin route */}
-          </Routes>
-        </div>
-        <Footer />
-      </div>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/portal" element={<Portal />} />
+        <Route
+          path="*"
+          element={
+            <div className="App">
+              <Navigation onLanguageChange={handleLanguageChange} />
+              <div className="content">
+                <Routes>
+                  <Route path="/" element={<Home />} /> {/* Home route */}
+                  <Route path="/about" element={<About language={language} />} /> {/* Pass language to About */}
+                  <Route path="/contact-us" element={<ContactUs />} /> {/* Contact Us route */}
+                  <Route path="/obituary" element={<Obituary />} /> {/* Obituary route */}
+                  <Route path="/bylaws" element={<Bylaws />} /> {/* Bylaws route */}
+                  <Route path="/adminLogin" element={<Admin />} /> {/* Admin route */}
+                </Routes>
+              </div>
+              <Footer />
+            </div>
+          }
+        />
+      </Routes>
     </Router>
   );
 }

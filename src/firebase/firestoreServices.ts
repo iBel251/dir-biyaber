@@ -1,4 +1,4 @@
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { app, db } from "./firebaseConfig"; // Ensure this file exports your Firebase configuration
 
@@ -195,6 +195,25 @@ export async function updateObituary(obituary: { id: string; name: string; descr
         await updateDoc(obituaryDoc, updatedData);
     } catch (error) {
         console.error("Error updating obituary:", error);
+        throw error;
+    }
+}
+
+// Function to fetch user roles from the "roles" collection
+export async function fetchUserRole(email: string): Promise<string | null> {
+    try {
+        const rolesDocRef = doc(db, "roles", "user_status");
+        const rolesDoc = await getDoc(rolesDocRef);
+
+        if (rolesDoc.exists()) {
+            const rolesData = rolesDoc.data();
+            return rolesData[email] || null; // Return the status for the given email
+        } else {
+            console.warn("No roles document found");
+            return null;
+        }
+    } catch (error) {
+        console.error("Error fetching user role:", error);
         throw error;
     }
 }

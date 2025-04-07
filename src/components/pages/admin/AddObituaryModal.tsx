@@ -36,9 +36,9 @@ const AddObituaryModal: React.FC<AddObituaryModalProps> = ({ onClose, onSave }) 
       return false;
     }
     if (formData.image) {
-      const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/webm'];
+      const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/webm', 'image/webp'];
       if (!validImageTypes.includes(formData.image.type)) {
-        setError('Only image files (JPEG, PNG, GIF, JPG, WEBM) are allowed.');
+        setError('Only image files (JPEG, PNG, GIF, JPG, WEBM, WEBP) are allowed.');
         return false;
       }
       if (formData.image.size > 5 * 1024 * 1024) {

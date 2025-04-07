@@ -4,7 +4,7 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 import EditBoardMemberModal from './EditBoardMemberModal';
 import { addBoardMember, fetchBoardMembers, deleteBoardMember, updateBoardMember } from '../../../firebase/firestoreServices';
 
-const BoardMemberModal: React.FC = () => {
+const BoardMemberModal: React.FC<{ adminRole: string }> = ({ adminRole }) => {
   const [boardMembers, setBoardMembers] = useState<any[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [currentItem, setCurrentItem] = useState<any | null>(null);
@@ -24,6 +24,11 @@ const BoardMemberModal: React.FC = () => {
 
     loadBoardMembers();
   }, []);
+
+  useEffect(() => {
+    console.log(`Admin role in BoardMemberModal: ${adminRole}`);
+    // Additional logic based on adminRole can be added here
+  }, [adminRole]);
 
   const handleDelete = async (): Promise<void> => {
     if (currentItem) {

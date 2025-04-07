@@ -1,9 +1,10 @@
 // The exported code uses Tailwind CSS. Install Tailwind CSS in your dev environment to ensure all styles work.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Add useEffect
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { logout } from '../../../firebase/authService'; // Import the logout function
+import { logout, getCurrentUser } from '../../../firebase/authService'; // Import the logout function and getCurrentUser
+import { fetchUserRole } from '../../../firebase/firestoreServices'; // Import fetchUserRole
 import Sidebar from './Sidebar';
 import ObituaryModal from './ObituaryModal';
 import BoardMemberModal from './BoardMemberModal';
@@ -17,6 +18,37 @@ const App: React.FC = () => {
   // State for sidebar collapse
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // State for admin role
+  const [adminRole, setAdminRole] = useState('regularAdmin'); // Default role
+
+  // Redirect to admin login if not logged in
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) {
+      navigate('/adminLogin'); // Redirect to admin login
+    }
+  }, [navigate]);
+
+  // Fetch and set the admin role
+  useEffect(() => {
+    const fetchAndSetUserRole = async () => {
+      const user = getCurrentUser();
+      const email = user?.email; // Get the email of the logged-in user
+      if (user && email) {
+        try {
+          const role = await fetchUserRole(email);
+          setAdminRole(role || 'regularAdmin'); // Default to 'regularAdmin' if no role is found
+        } catch (error) {
+          console.error("Error fetching admin role:", error);
+        }
+      } else {
+        navigate('/adminLogin'); // Redirect to admin login
+      }
+    };
+
+    fetchAndSetUserRole();
+  }, [navigate]);
+
   // Function to get content based on active menu item
   const getContent = () => {
     switch (activeItem) {
@@ -28,10 +60,10 @@ const App: React.FC = () => {
         );
       case 'obituaries':
         // Render Obituary page directly
-        return <ObituaryModal />;
+        return <ObituaryModal adminRole={adminRole} />; // Pass adminRole
       case 'board-members':
         // Render BoardMember page directly
-        return <BoardMemberModal />;
+        return <BoardMemberModal adminRole={adminRole} />; // Pass adminRole
       default:
         return <div>Page not found</div>;
     }

@@ -1,45 +1,46 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import emailjs from '@emailjs/browser';
 
 const ContactForm: React.FC = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
-  });
+  const form = useRef<HTMLFormElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const sendEmail = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    setFormData({
-      name: '',
-      email: '',
-      subject: '',
-      message: ''
-    });
-    alert('Thank you for your message. We will get back to you soon!');
+    setIsSubmitting(true);
+
+    emailjs
+      .sendForm(
+        process.env.REACT_APP_EMAILJS_SERVICE_ID!, // Use environment variable
+        process.env.REACT_APP_EMAILJS_TEMPLATE_ID!, // Use environment variable
+        form.current!,
+        process.env.REACT_APP_EMAILJS_PUBLIC_KEY! // Use environment variable
+      )
+      .then(
+        () => {
+          alert('Thank you for your message. We will get back to you soon!');
+          form.current?.reset();
+        },
+        (error) => {
+          console.error('Failed to send message:', error.text);
+          alert('Failed to send your message. Please try again later.');
+        }
+      )
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   return (
     <div className="bg-white rounded-xl shadow-md p-8">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6">Send us a message</h2>
-      <form onSubmit={handleSubmit}>
+      <form ref={form} onSubmit={sendEmail}>
         <div className="mb-6">
           <label htmlFor="name" className="block text-gray-700 mb-2 text-left">Full Name</label>
           <input
             type="text"
             id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
+            name="from_name"
             className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors text-sm"
             placeholder="Your name"
             required
@@ -51,23 +52,8 @@ const ContactForm: React.FC = () => {
             type="email"
             id="email"
             name="email"
-            value={formData.email}
-            onChange={handleChange}
             className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors text-sm"
             placeholder="Your email"
-            required
-          />
-        </div>
-        <div className="mb-6">
-          <label htmlFor="subject" className="block text-gray-700 mb-2 text-left">Subject</label>
-          <input
-            type="text"
-            id="subject"
-            name="subject"
-            value={formData.subject}
-            onChange={handleChange}
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors text-sm"
-            placeholder="Subject of your message"
             required
           />
         </div>
@@ -76,19 +62,18 @@ const ContactForm: React.FC = () => {
           <textarea
             id="message"
             name="message"
-            value={formData.message}
-            onChange={handleChange}
             rows={6}
             className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-colors text-sm resize-none"
             placeholder="Your message"
             required
           ></textarea>
         </div>
-        <button 
+        <button
           type="submit"
-          className="!rounded-button whitespace-nowrap bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-8 rounded-lg transition duration-300 cursor-pointer"
+          className={`!rounded-button whitespace-nowrap bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-8 rounded-lg transition duration-300 cursor-pointer ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={isSubmitting}
         >
-          Send Message
+          {isSubmitting ? 'Sending...' : 'Send Message'}
         </button>
       </form>
     </div>

@@ -3,13 +3,18 @@ import { fetchObituaries, addObituary, deleteObituary } from '../../../firebase/
 import AddObituaryModal from './AddObituaryModal';
 import ObituaryDeleteConfirmationModal from './ObituaryDeleteConfirmationModal'
 
-const ObituaryModal: React.FC = () => {
+const ObituaryModal: React.FC<{ adminRole: string }> = ({ adminRole }) => {
   const [obituaries, setObituaries] = useState<
     { id: string; nameEn: string; nameAm: string; birthYear: string; deathDate: string; number: string; imageUrl?: string }[]
   >([]);
   const [currentItem, setCurrentItem] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  useEffect(() => {
+    console.log(`Admin role in ObituaryModal: ${adminRole}`);
+    // Additional logic based on adminRole can be added here
+  }, [adminRole]);
 
   useEffect(() => {
     const fetchData = async () => {
