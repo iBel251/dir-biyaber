@@ -1,19 +1,22 @@
 // The exported code uses Tailwind CSS. Install Tailwind CSS in your dev environment to ensure all styles work.
 
-import React, { useState, useEffect } from 'react'; // Add useEffect
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { logout, getCurrentUser } from '../../../firebase/authService'; // Import the logout function and getCurrentUser
-import { fetchUserRole } from '../../../firebase/firestoreServices'; // Import fetchUserRole
+import { useNavigate } from 'react-router-dom';
+import { logout, getCurrentUser } from '../../../firebase/authService';
+import { fetchUserRole } from '../../../firebase/firestoreServices';
+import { onAuthStateChanged, getAuth } from 'firebase/auth';
 import Sidebar from './Sidebar';
 import ObituaryModal from './ObituaryModal';
 import BoardMemberModal from './BoardMemberModal';
+import PostsPage from './PostsPage';
+import AdminRoleManagement from './AdminRoleManagement';
 
 const App: React.FC = () => {
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   // State for active sidebar item
-  const [activeItem, setActiveItem] = useState('dashboard');
+  const [activeItem, setActiveItem] = useState('posts');
   
   // State for sidebar collapse
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -21,32 +24,28 @@ const App: React.FC = () => {
   // State for admin role
   const [adminRole, setAdminRole] = useState('regularAdmin'); // Default role
 
-  // Redirect to admin login if not logged in
+  // Use onAuthStateChanged to wait for Firebase to finish restoring the session
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
-      navigate('/adminLogin'); // Redirect to admin login
-    }
-  }, [navigate]);
-
-  // Fetch and set the admin role
-  useEffect(() => {
-    const fetchAndSetUserRole = async () => {
-      const user = getCurrentUser();
-      const email = user?.email; // Get the email of the logged-in user
-      if (user && email) {
-        try {
-          const role = await fetchUserRole(email);
-          setAdminRole(role || 'regularAdmin'); // Default to 'regularAdmin' if no role is found
-        } catch (error) {
-          console.error("Error fetching admin role:", error);
-        }
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        navigate('/adminLogin');
       } else {
-        navigate('/adminLogin'); // Redirect to admin login
+        const fetchAndSetUserRole = async () => {
+          const email = user.email; // Get the email of the logged-in user
+          if (email) {
+            try {
+              const role = await fetchUserRole(email);
+              setAdminRole(role || 'regularAdmin'); // Default to 'regularAdmin' if no role is found
+            } catch (error) {
+              console.error("Error fetching admin role:", error);
+            }
+          }
+        };
+        fetchAndSetUserRole();
       }
-    };
-
-    fetchAndSetUserRole();
+    });
+    return () => unsubscribe();
   }, [navigate]);
 
   // Function to get content based on active menu item
@@ -58,12 +57,17 @@ const App: React.FC = () => {
             <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
           </div>
         );
+      case 'posts':
+        // Render Posts page
+        return <PostsPage />;
       case 'obituaries':
         // Render Obituary page directly
         return <ObituaryModal adminRole={adminRole} />; // Pass adminRole
       case 'board-members':
         // Render BoardMember page directly
         return <BoardMemberModal adminRole={adminRole} />; // Pass adminRole
+      case 'admin-roles':
+        return <AdminRoleManagement />;
       default:
         return <div>Page not found</div>;
     }

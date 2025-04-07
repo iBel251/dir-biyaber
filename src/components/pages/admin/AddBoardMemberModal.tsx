@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 interface AddBoardMemberModalProps {
   onClose: () => void;
-  onSave: (member: { nameEn: string; nameAm: string; role: string; image: File | null }) => Promise<void>;
+  onSave: (member: { nameEn: string; nameAm: string; role: string; image: File | null; position: number }) => Promise<void>;
 }
 
 const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({ onClose, onSave }) => {
@@ -11,13 +11,14 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({ onClose, onSa
     nameAm: '',
     role: '',
     image: null as File | null,
+    position: 0, // Add position field
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const validateForm = (): boolean => {
-    if (!formData.nameEn || !formData.nameAm || !formData.role || !formData.image) {
-      setError('All fields are required.');
+    if (!formData.nameEn || !formData.nameAm || !formData.role || !formData.image || formData.position < 0) {
+      setError('All fields are required, and position must be a non-negative number.');
       return false;
     }
     if (formData.image) {
@@ -86,6 +87,16 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({ onClose, onSa
               id="image"
               className="w-full text-sm"
               onChange={(e) => setFormData({ ...formData, image: e.target.files ? e.target.files[0] : null })}
+            />
+          </div>
+          <div>
+            <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+            <input
+              type="number"
+              id="position"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              value={formData.position}
+              onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value, 10) })}
             />
           </div>
         </div>

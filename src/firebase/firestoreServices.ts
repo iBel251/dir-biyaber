@@ -25,8 +25,10 @@ export async function fetchBoardMembers() {
         const boardMembersCollection = collection(db, "board_members");
         const snapshot = await getDocs(boardMembersCollection);
 
-        // Map through the documents and return their data
-        const boardMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Map through the documents and return their data, sorted by position
+        const boardMembers = snapshot.docs
+            .map(doc => ({ id: doc.id, ...(doc.data() as { position: number }) }))
+            .sort((a, b) => a.position - b.position); // Sort by position
         return boardMembers;
     } catch (error) {
         console.error("Error fetching board members:", error);
@@ -35,7 +37,7 @@ export async function fetchBoardMembers() {
 }
 
 // Function to add a board member to Firestore and upload the image to Storage
-export async function addBoardMember(member: { nameEn: string; nameAm: string; role: string; image: File | null }) {
+export async function addBoardMember(member: { nameEn: string; nameAm: string; role: string; image: File | null; position: number }) {
     try {
         let imageUrl = null;
 
@@ -54,6 +56,7 @@ export async function addBoardMember(member: { nameEn: string; nameAm: string; r
             nameAm: member.nameAm,
             role: member.role,
             imageUrl, // Link to the uploaded image
+            position: member.position, // Include position
         };
         await addDoc(boardMembersCollection, newMember);
     } catch (error) {
@@ -89,7 +92,7 @@ export async function deleteBoardMember(memberId: string, imageUrl: string | nul
 }
 
 // Function to update a board member in Firestore
-export async function updateBoardMember(member: { id: string; nameEn: string; nameAm: string; role: string; image: File | null; imageUrl?: string }) {
+export async function updateBoardMember(member: { id: string; nameEn: string; nameAm: string; role: string; image: File | null; imageUrl?: string; position: number }) {
     try {
         const memberDoc = doc(db, "board_members", member.id);
         let imageUrl = member.image ? null : member.imageUrl;
@@ -108,6 +111,7 @@ export async function updateBoardMember(member: { id: string; nameEn: string; na
             nameAm: member.nameAm,
             role: member.role,
             imageUrl, // Update the imageUrl field
+            position: member.position, // Include position
         };
         await updateDoc(memberDoc, updatedData);
     } catch (error) {

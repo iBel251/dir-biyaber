@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
 interface EditBoardMemberModalProps {
-  member: { id: string; nameEn: string; nameAm: string; role: string; imageUrl: string | null };
+  member: { id: string; nameEn: string; nameAm: string; role: string; imageUrl: string | null; position?: number };
   onClose: () => void;
-  onSave: (updatedMember: { id: string; nameEn: string; nameAm: string; role: string; image: File | null }) => Promise<void>;
+  onSave: (updatedMember: { id: string; nameEn: string; nameAm: string; role: string; image: File | null; position: number }) => Promise<void>;
 }
 
 const EditBoardMemberModal: React.FC<EditBoardMemberModalProps> = ({ member, onClose, onSave }) => {
@@ -12,6 +12,7 @@ const EditBoardMemberModal: React.FC<EditBoardMemberModalProps> = ({ member, onC
     nameAm: member.nameAm,
     role: member.role,
     image: null as File | null,
+    position: member.position || 0, // Add position field
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -45,6 +46,7 @@ const EditBoardMemberModal: React.FC<EditBoardMemberModalProps> = ({ member, onC
         nameAm: formData.nameAm,
         role: formData.role,
         image: formData.image, // Pass the new image file if provided
+        position: formData.position, // Pass the position field
     });
     setIsLoading(false);
     onClose();
@@ -84,6 +86,16 @@ const EditBoardMemberModal: React.FC<EditBoardMemberModalProps> = ({ member, onC
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            />
+          </div>
+          <div>
+            <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+            <input
+              type="number"
+              id="position"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              value={formData.position}
+              onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value, 10) })}
             />
           </div>
           <div>

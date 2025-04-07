@@ -16,7 +16,7 @@ const BoardMemberModal: React.FC<{ adminRole: string }> = ({ adminRole }) => {
       try {
         const members = await fetchBoardMembers();
         console.log("Fetched board members:", members);
-        setBoardMembers(members);
+        setBoardMembers(members.sort((a, b) => a.position - b.position)); // Sort by position
       } catch (error) {
         console.error("Error loading board members:", error);
       }
@@ -47,7 +47,7 @@ const BoardMemberModal: React.FC<{ adminRole: string }> = ({ adminRole }) => {
     try {
       await addBoardMember(newMember);
       const members = await fetchBoardMembers();
-      setBoardMembers(members);
+      setBoardMembers(members.sort((a, b) => a.position - b.position)); // Sort by position
     } catch (error) {
       console.error("Error adding board member:", error);
     }
@@ -57,7 +57,7 @@ const BoardMemberModal: React.FC<{ adminRole: string }> = ({ adminRole }) => {
     try {
       await updateBoardMember(updatedMember);
       const members = await fetchBoardMembers();
-      setBoardMembers(members);
+      setBoardMembers(members.sort((a, b) => a.position - b.position)); // Sort by position
     } catch (error) {
       console.error("Error updating board member:", error);
     }

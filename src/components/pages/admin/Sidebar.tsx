@@ -1,4 +1,5 @@
 import React from 'react';
+import PostsPage from './PostsPage';
 
 interface SidebarProps {
   sidebarCollapsed: boolean;
@@ -23,11 +24,11 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarCollapsed, setSidebarCollapsed
         <ul>
           <li>
             <button 
-              onClick={() => setActiveItem('dashboard')}
-              className={`flex items-center w-full px-4 py-3 ${activeItem === 'dashboard' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
+              onClick={() => setActiveItem('board-members')}
+              className={`flex items-center w-full px-4 py-3 ${activeItem === 'board-members' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
             >
-              <i className="fas fa-tachometer-alt w-5"></i>
-              <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Dashboard</span>
+              <i className="fas fa-users w-5"></i>
+              <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Board Members</span>
             </button>
           </li>
           <li>
@@ -41,15 +42,25 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarCollapsed, setSidebarCollapsed
           </li>
           <li>
             <button 
-              onClick={() => setActiveItem('board-members')}
-              className={`flex items-center w-full px-4 py-3 ${activeItem === 'board-members' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
+              onClick={() => setActiveItem('posts')}
+              className={`flex items-center w-full px-4 py-3 ${activeItem === 'posts' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
             >
-              <i className="fas fa-users w-5"></i>
-              <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Board Members</span>
+              <i className="fas fa-edit w-5"></i>
+              <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Posts</span>
+            </button>
+          </li>
+          <li>
+            <button 
+              onClick={() => setActiveItem('admin-roles')}
+              className={`flex items-center w-full px-4 py-3 ${activeItem === 'admin-roles' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
+            >
+              <i className="fas fa-user-shield w-5"></i>
+              <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Admin Roles</span>
             </button>
           </li>
         </ul>
       </nav>
+
     </div>
   );
 };

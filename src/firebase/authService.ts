@@ -1,4 +1,4 @@
-import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { app } from "./firebaseConfig"; // Ensure this file exports your Firebase configuration
 
 const auth = getAuth(app);
@@ -37,6 +37,28 @@ export async function resetPassword(email: string): Promise<void> {
         console.log("If an account with this email exists, a password reset email has been sent.");
     } catch (error: any) {
         console.error("Error sending password reset email:", error.code, error.message);
+        throw error;
+    }
+}
+
+// Function to create an admin user
+export async function createAdminUser(email: string, password: string) {
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        return userCredential.user;
+    } catch (error) {
+        console.error("Error creating admin user:", error);
+        throw error;
+    }
+}
+
+// Function to delete an admin user
+export async function deleteAdminUser(uid: string): Promise<void> {
+    try {
+        await deleteUser(auth.currentUser!); // The user object must be the one you intend to delete, if logged in
+        console.log("Admin user deleted successfully.");
+    } catch (error) {
+        console.error("Error deleting admin user:", error);
         throw error;
     }
 }

@@ -1,10 +1,11 @@
 // The exported code uses Tailwind CSS. Install Tailwind CSS in your dev environment to ensure all styles work.
 
 import React, { useState, useEffect } from 'react';
-import {Helmet} from 'react-helmet';
+
+import { Helmet } from 'react-helmet';
 import { Link } from "react-router-dom";
 import Hero from './Hero';
-import LatestDeceased from './LatestDeceased';
+import PostsSection from './PostsSection'; // Import PostsSection
 
 const App: React.FC = () => {
   // Mock data for community highlights
@@ -73,40 +74,19 @@ const App: React.FC = () => {
         <section className="py-8 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-orange-500">
-                  የድር ቢያብር ዕድር መረዳጃ ማህበር ድህረ ገጽ
+                   የድር ቢያብር ዕድር መረዳጃ ማህበር ድህረ ገጽ
             </h1>
           </div>
         </section>
 
-        {/* About Section */}
-        <section id="about" className="py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row items-center gap-12">
-              <div className="md:w-1/2 initially-hidden">
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-800">Dir Biyaber Edir</h2>
-                <p className="text-gray-600 text-lg mb-6 leading-relaxed">
-                  Dir Biyaber Edir Mutual Assistance Association of Los Angeles is a nonprofit organization dedicated to supporting families during the challenging time of a loved one’s passing. 
-                </p>
-                <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-                  Headquartered at 1400 S Hayworth Avenue 207 in Los Angeles, CA 90035, our mission is to provide financial aid to cover funeral expenses, alleviating the financial burden on families during such difficult times.
-                </p>
-              </div>
-              <div className="md:w-1/2 initially-hidden">
-                <div className="rounded-2xl overflow-hidden shadow-xl">
-                  <img 
-                    src="/images/officeArgawBelay.jpg" 
-                    alt="Dirbyaber Community Members" 
-                    className="w-full h-full object-cover object-top"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+
+        {/* Posts Section */}
+        <section 
+          className="bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100"
+
+        >
+          <PostsSection />
         </section>
-
-        {/* Latest Deceased Section */}
-        <LatestDeceased person={latestDeceased} />
-
 
         {/* Community Highlights */}
         <section id="highlights" className="py-12 bg-white">
