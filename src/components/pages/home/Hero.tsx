@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const Hero: React.FC = () => {
+const Hero: React.FC<{ language: string }> = ({ language }) => {
   return (
     <section className="relative flex items-center justify-center overflow-hidden" style={{
       height: 'calc(100vh - 3.5rem)', // Adjust height to account for the nav
@@ -38,28 +38,30 @@ const Hero: React.FC = () => {
         transform: 'translateY(-50%)' // Adjust for centering
       }}></div>
       <div className="relative z-1 text-center px-4 max-w-5xl mx-auto">
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight animate-fade-in" style={{
+        <h1 className="amharic-text text-5xl md:text-7xl font-bold text-white mb-6 leading-tight animate-fade-in" style={{
           textShadow: '2px 2px 6px rgba(0, 0, 0, 0.7)'
         }}>
-          Dir Biyaber Edir Mutual Assistance Association
+          {language === "en"
+            ? "Dir Biyaber Edir Mutual Assistance Association"
+            : "ድር ቢያብር የጋራ መረዳጃ ማህበር"}
         </h1>
-        <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto animate-slide-up" style={{
+        <p className="amharic-text text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto animate-slide-up" style={{
           textShadow: '1px 1px 4px rgba(0, 0, 0, 0.6)'
         }}>
-          Los Angeles, California
+          {language === "en" ? "Los Angeles, California" : "ሎስ አንጀለስ ካሊፎርኒያ"}
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <button 
-            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 cursor-pointer !rounded-button whitespace-nowrap"
-            onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
+          <Link 
+            to="/about" 
+            className="amharic-text bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 cursor-pointer !rounded-button whitespace-nowrap"
           >
-            Learn More
-          </button>
+            {language === "en" ? "Learn More" : "ተጨማሪ መረጃ"}
+          </Link>
           <Link 
             to="/contact-us" 
-            className="bg-transparent border-2 border-white text-white hover:bg-white/10 px-8 py-3 rounded-lg text-lg font-medium transition-all duration-300 cursor-pointer !rounded-button whitespace-nowrap"
+            className="amharic-text bg-transparent border-2 border-white text-white hover:bg-white/10 px-8 py-3 rounded-lg text-lg font-medium transition-all duration-300 cursor-pointer !rounded-button whitespace-nowrap"
           >
-            Join Us
+            {language === "en" ? "Join Us" : "ይቀላቀሉን"}
           </Link>
         </div>
       </div>

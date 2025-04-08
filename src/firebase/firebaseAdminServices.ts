@@ -259,3 +259,23 @@ export async function deleteUserByUID(uid: string): Promise<void> {
     const deleteUser = httpsCallable(functions, 'deleteUser');
     await deleteUser({ uid });
 }
+
+// Function to fetch a user's role by email from the "roles" collection
+export async function fetchUserRoleByEmail(email: string): Promise<string | null> {
+    try {
+        const rolesDocRef = doc(db, 'roles', 'user_status');
+        const rolesDoc = await getDoc(rolesDocRef);
+
+        if (rolesDoc.exists()) {
+            const userRoles = rolesDoc.data()?.userRoles || [];
+            const userRole = userRoles.find((u: any) => u.email === email)?.role;
+            return userRole || null; // Return the role or null if not found
+        } else {
+            console.warn("Roles document does not exist.");
+            return null;
+        }
+    } catch (error) {
+        console.error("Error fetching user role by email:", error);
+        throw error;
+    }
+}

@@ -1,3 +1,14 @@
+@font-face {
+  font-family: 'AmharicFont';
+  src: url('./assets/fonts/NokiaPureHeadline.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html, body {
+  font-family: 'AmharicFont', sans-serif;
+}
+
 .App {
   text-align: center;
 }

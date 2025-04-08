@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import Hero from './Hero';
 import PostsSection from './PostsSection'; // Import PostsSection
 
-const App: React.FC = () => {
+const App: React.FC<{ language: string }> = ({ language }) => {
   // Mock data for community highlights
   const communityHighlights = [
     {
@@ -68,13 +68,13 @@ const App: React.FC = () => {
         {/* Navigation */}
 
         {/* Hero Section */}
-        <Hero />
+        <Hero language={language} />
 
         {/* Main Header */}
         <section className="py-8 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-orange-500">
-                   የድር ቢያብር ዕድር መረዳጃ ማህበር ድህረ ገጽ
+            <h1 className="amharic-text text-3xl md:text-4xl text-orange-500">              
+                 ድር ቢያብር እድር የጋራ መረዳጃ ማህበር ድህረ ገጽ
             </h1>
           </div>
         </section>

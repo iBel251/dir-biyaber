@@ -86,35 +86,41 @@ const BoardMemberModal: React.FC<{ adminRole: string }> = ({ adminRole }) => {
               <p className="text-sm text-gray-500">{member.role}</p>
             </div>
             <div className="flex space-x-3">
-              <button
-                onClick={() => {
-                  setCurrentItem(member);
-                  setShowEditModal(true);
-                }}
-                className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => {
-                  setCurrentItem(member);
-                  setShowDeleteConfirm(true);
-                }}
-                className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-              >
-                Delete
-              </button>
+              {adminRole === 'superAdmin' && ( // Show only for superAdmin
+                <>
+                  <button
+                    onClick={() => {
+                      setCurrentItem(member);
+                      setShowEditModal(true);
+                    }}
+                    className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCurrentItem(member);
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
             </div>
           </div>
         ))}
       </div>
 
-      <button
-        onClick={() => setShowAddModal(true)}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 !rounded-button"
-      >
-        Add new member
-      </button>
+      {adminRole === 'superAdmin' && ( // Show only for superAdmin
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 !rounded-button"
+        >
+          Add new member
+        </button>
+      )}
 
       {showAddModal && (
         <AddBoardMemberModal

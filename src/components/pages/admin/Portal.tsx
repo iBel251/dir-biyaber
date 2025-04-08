@@ -6,17 +6,19 @@ import { useNavigate } from 'react-router-dom';
 import { logout, getCurrentUser } from '../../../firebase/authService';
 import { fetchUserRole } from '../../../firebase/firestoreServices';
 import { onAuthStateChanged, getAuth } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import Sidebar from './Sidebar';
 import ObituaryModal from './ObituaryModal';
 import BoardMemberModal from './BoardMemberModal';
 import PostsPage from './PostsPage';
 import AdminRoleManagement from './AdminRoleManagement';
+import { fetchUserRoleByEmail } from '../../../firebase/firebaseAdminServices';
 
 const App: React.FC = () => {
   const navigate = useNavigate();
 
   // State for active sidebar item
-  const [activeItem, setActiveItem] = useState('posts');
+  const [activeItem, setActiveItem] = useState('board-members');
   
   // State for sidebar collapse
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -35,7 +37,7 @@ const App: React.FC = () => {
           const email = user.email; // Get the email of the logged-in user
           if (email) {
             try {
-              const role = await fetchUserRole(email);
+              const role = await fetchUserRoleByEmail(email);
               setAdminRole(role || 'regularAdmin'); // Default to 'regularAdmin' if no role is found
             } catch (error) {
               console.error("Error fetching admin role:", error);
@@ -59,7 +61,7 @@ const App: React.FC = () => {
         );
       case 'posts':
         // Render Posts page
-        return <PostsPage />;
+        return <PostsPage adminRole={adminRole} />; // Pass adminRole
       case 'obituaries':
         // Render Obituary page directly
         return <ObituaryModal adminRole={adminRole} />; // Pass adminRole
@@ -117,6 +119,7 @@ const App: React.FC = () => {
             setSidebarCollapsed={setSidebarCollapsed} 
             activeItem={activeItem} 
             setActiveItem={setActiveItem} 
+            adminRole={adminRole} // Pass adminRole to Sidebar
           />
           {/* Main Content */}
           <div className="flex-1 overflow-auto">

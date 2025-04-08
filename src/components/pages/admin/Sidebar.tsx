@@ -6,9 +6,10 @@ interface SidebarProps {
   setSidebarCollapsed: (collapsed: boolean) => void;
   activeItem: string;
   setActiveItem: (item: string) => void;
+  adminRole: string; // Add adminRole prop
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ sidebarCollapsed, setSidebarCollapsed, activeItem, setActiveItem }) => {
+const Sidebar: React.FC<SidebarProps> = ({ sidebarCollapsed, setSidebarCollapsed, activeItem, setActiveItem, adminRole }) => {
   return (
     <div className={`bg-gray-800 text-white ${sidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300 flex-shrink-0`}>
       <div className="p-4 flex justify-between items-center border-b border-gray-700">
@@ -49,15 +50,17 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarCollapsed, setSidebarCollapsed
               <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Posts</span>
             </button>
           </li>
-          <li>
-            <button 
-              onClick={() => setActiveItem('admin-roles')}
-              className={`flex items-center w-full px-4 py-3 ${activeItem === 'admin-roles' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
-            >
-              <i className="fas fa-user-shield w-5"></i>
-              <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Admin Roles</span>
-            </button>
-          </li>
+          {adminRole === 'superAdmin' && ( // Show only for superAdmin
+            <li>
+              <button 
+                onClick={() => setActiveItem('admin-roles')}
+                className={`flex items-center w-full px-4 py-3 ${activeItem === 'admin-roles' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
+              >
+                <i className="fas fa-user-shield w-5"></i>
+                <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Admin Roles</span>
+              </button>
+            </li>
+          )}
         </ul>
       </nav>
 

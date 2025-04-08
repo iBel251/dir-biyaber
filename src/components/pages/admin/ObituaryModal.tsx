@@ -61,12 +61,14 @@ const ObituaryModal: React.FC<{ adminRole: string }> = ({ adminRole }) => {
   return (
     <div className="p-6">
       <h3 className="text-lg font-medium text-gray-900 mb-4">Obituaries</h3>
-      <button
-        onClick={() => setShowAddModal(true)}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded mb-4"
-      >
-        Add Obituary
-      </button>
+      {adminRole === 'superAdmin' && ( // Show only for superAdmin
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded mb-4"
+        >
+          Add Obituary
+        </button>
+      )}
 
       {/* Display obituaries in card mode */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

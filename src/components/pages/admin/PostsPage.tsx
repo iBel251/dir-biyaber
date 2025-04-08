@@ -3,7 +3,7 @@ import { fetchPosts, addPost, deletePost, editPostImage, editPost } from '../../
 import PostModal from './PostModal';
 import EditPostModal from './EditPostModal'; // Import your new modal
 
-const PostsPage: React.FC = () => {
+const PostsPage: React.FC<{ adminRole: string }> = ({ adminRole }) => {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -98,12 +98,14 @@ const PostsPage: React.FC = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Posts</h1>
-      <button 
-        onClick={() => setShowAddModal(true)} 
-        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Add Post
-      </button>
+      {adminRole === 'superAdmin' && ( // Show only for superAdmin
+        <button 
+          onClick={() => setShowAddModal(true)} 
+          className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Add Post
+        </button>
+      )}
       {posts.length > 0 ? (
         <div className="space-y-6">
           {posts.map(post => (
@@ -118,13 +120,15 @@ const PostsPage: React.FC = () => {
                     alt={post.header} 
                     className="w-full h-48 md:h-auto object-cover rounded-lg"
                   />
-                  <button 
-                    className={`mt-2 px-4 py-2 rounded text-white ${uploadingPostId === post.id ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
-                    onClick={() => openFileManager(post.id)}
-                    disabled={uploadingPostId === post.id}
-                  >
-                    {uploadingPostId === post.id ? 'Uploading...' : 'Update Image'}
-                  </button>
+                  {adminRole === 'superAdmin' && ( // Show only for superAdmin
+                    <button 
+                      className={`mt-2 px-4 py-2 rounded text-white ${uploadingPostId === post.id ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
+                      onClick={() => openFileManager(post.id)}
+                      disabled={uploadingPostId === post.id}
+                    >
+                      {uploadingPostId === post.id ? 'Uploading...' : 'Update Image'}
+                    </button>
+                  )}
                 </div>
               )}
               <div className="md:w-1/2">
@@ -135,24 +139,28 @@ const PostsPage: React.FC = () => {
                   ))}
                 </div>
                 <p className="text-sm text-gray-500">Posted on: {new Date(post.createdAt).toLocaleDateString()}</p>
-                <button 
-                  onClick={() => {
-                    setPostToEdit(post);
-                    setShowEditModal(true);
-                  }}
-                  className="mt-2 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => {
-                    setPostToDelete(post);
-                    setShowDeleteModal(true);
-                  }} 
-                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 ml-2"
-                >
-                  Delete
-                </button>
+                {adminRole === 'superAdmin' && ( // Show only for superAdmin
+                  <>
+                    <button 
+                      onClick={() => {
+                        setPostToEdit(post);
+                        setShowEditModal(true);
+                      }}
+                      className="mt-2 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setPostToDelete(post);
+                        setShowDeleteModal(true);
+                      }} 
+                      className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 ml-2"
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -160,23 +168,24 @@ const PostsPage: React.FC = () => {
       ) : (
         <p>No posts available.</p>
       )}
-
-      <PostModal 
-        show={showAddModal} 
-        onClose={() => setShowAddModal(false)} 
-        onAddPost={handleAddPost} 
-        newPost={newPost} 
-        setNewPost={setNewPost} 
-      />
-
-      <EditPostModal
-        show={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        onSave={(header, body) => handleEditContent(postToEdit.id, header, body)}
-        postToEdit={postToEdit || { id: '', header: '', body: '' }}
-      />
-
-      {showDeleteModal && (
+      {adminRole === 'superAdmin' && ( // Show only for superAdmin
+        <PostModal 
+          show={showAddModal} 
+          onClose={() => setShowAddModal(false)} 
+          onAddPost={handleAddPost} 
+          newPost={newPost} 
+          setNewPost={setNewPost} 
+        />
+      )}
+      {adminRole === 'superAdmin' && ( // Show only for superAdmin
+        <EditPostModal
+          show={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSave={(header, body) => handleEditContent(postToEdit.id, header, body)}
+          postToEdit={postToEdit || { id: '', header: '', body: '' }}
+        />
+      )}
+      {showDeleteModal && adminRole === 'superAdmin' && ( // Show only for superAdmin
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded shadow-lg w-96">
             <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>

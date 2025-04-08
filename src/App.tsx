@@ -22,9 +22,15 @@ function App() {
 
   const ScrollToTop = () => {
     const location = useLocation(); // Get the current location
+    const [prevLocation, setPrevLocation] = useState(location);
+
     useEffect(() => {
-      window.scrollTo(0, 0); // Scroll to the top on route change
-    }, [location]); // Run effect when location changes
+      if (location.pathname !== prevLocation.pathname) { // Only scroll on route change
+        window.scrollTo(0, 0);
+      }
+      setPrevLocation(location); // Update previous location
+    }, [location, prevLocation]); // Run effect when location changes
+
     return null; // This component doesn't render anything
   };
 
@@ -40,7 +46,7 @@ function App() {
               <Navigation onLanguageChange={handleLanguageChange} />
               <div className="content">
                 <Routes>
-                  <Route path="/" element={<Home />} /> {/* Home route */}
+                  <Route path="/" element={<Home language={language}/>} /> {/* Home route */}
                   <Route path="/about" element={<About language={language} />} /> {/* Pass language to About */}
                   <Route path="/contact-us" element={<ContactUs />} /> {/* Contact Us route */}
                   <Route path="/obituary" element={<Obituary />} /> {/* Obituary route */}

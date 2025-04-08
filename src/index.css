@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
+/* filepath: c:\MyFiles\WebDev\dirbyaber\src\styles\global.css */
+body {
+  font-family: 'AmharicFont', sans-serif;
+}
+
 /* Add any custom styles below if needed */
 ::-webkit-scrollbar {
     width: 12px;
@@ -17,3 +24,6 @@
     border: 3px solid #282c34;
   }
   
+  .amharic-text {
+    font-family: 'AmharicFont', sans-serif;
+  }
