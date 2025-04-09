@@ -29,7 +29,7 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <img src="/images/logonew.jpg" alt="Logo" className="h-full mr-2 ml-0" /> {/* Adjust logo height to fill nav */}
-            <div className="text-2xl font-bold text-orange-500">ድር ቢያብር Dir Biyaber LA</div>
+            <div className="text-2xl font-bold text-blue-900">ድር ቢያብር Dir Biyaber LA</div>
           </div>
           <div className="hidden md:flex items-center space-x-8">
             <Link

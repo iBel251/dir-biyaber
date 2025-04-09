@@ -34,7 +34,7 @@ const App: React.FC<{ language: string }> = ({ language }) => {
             <div className="w-24 h-1 bg-indigo-600 mx-auto"></div>
             <div >
               <img
-                src="/images/logocircular.png"
+                src={`${process.env.PUBLIC_URL}/images/logobig.png`} // Updated path
                 alt="Dir Biyaber Edir Logo"
                 className="mx-auto w-64 h-auto" // Increased width
               />
@@ -56,14 +56,14 @@ const App: React.FC<{ language: string }> = ({ language }) => {
           {/* Team Section */}
           <div className="mb-10">
             <h2
-              className="amharic-text text-3xl font-bold text-center text-gray-900 mb-4"
+              className="amharic-text text-5xl md:text-7xl font-bold text-center text-gray-900 mb-4"
               style={{
                 backgroundImage: "url('/images/bgscroll2.png')",
-                backgroundSize: "110% 120%", // Stretch to fill the text background
+                backgroundSize: "110% 150%", // Stretch to fill the text background
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "center",
                 display: "inline-block",
-                padding: "2.5rem 3rem 3rem 3rem",
+                padding: "3rem 5rem 3.5rem 5rem",
                 color: "rgba(0, 0, 0, 0.8)", // Add transparency to the text
                 textShadow: "1px 1px 4px rgba(255, 255, 255, 0.6)", // Subtle shadow effect
               }}
