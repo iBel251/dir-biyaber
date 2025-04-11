@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchPosts, addPost, deletePost, editPostImage, editPost } from '../../../firebase/firebaseAdminServices';
+import { fetchPosts, addPost, deletePost, editPostImage, editPost, updatePostsOrder } from '../../../firebase/firebaseAdminServices';
 import PostModal from './PostModal';
 import EditPostModal from './EditPostModal'; // Import your new modal
 
@@ -9,7 +9,12 @@ const PostsPage: React.FC<{ adminRole: string }> = ({ adminRole }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [postToDelete, setPostToDelete] = useState<any | null>(null);
-  const [newPost, setNewPost] = useState<{ header: string; body: string; image: File | null }>({ header: '', body: '', image: null });
+  const [newPost, setNewPost] = useState<{ header: string; body: string; image: File | null; section: string }>({
+    header: '',
+    body: '',
+    image: null,
+    section: '', // Add section field
+  });
   const [uploadingPostId, setUploadingPostId] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [postToEdit, setPostToEdit] = useState<any | null>(null);
@@ -33,7 +38,7 @@ const PostsPage: React.FC<{ adminRole: string }> = ({ adminRole }) => {
     try {
       await addPost(newPost);
       setShowAddModal(false);
-      setNewPost({ header: '', body: '', image: null });
+      setNewPost({ header: '', body: '', image: null, section: '' }); // Reset section field
       const updatedPosts = await fetchPosts();
       setPosts(updatedPosts);
     } catch (error) {
@@ -68,9 +73,9 @@ const PostsPage: React.FC<{ adminRole: string }> = ({ adminRole }) => {
     }
   };
 
-  const handleEditContent = async (postId: string, header: string, body: string) => {
+  const handleEditContent = async (postId: string, header: string, body: string, section: string) => {
     try {
-      await editPost(postId, { header, body });
+      await editPost(postId, { header, body, section }); // Include section
       const updatedPosts = await fetchPosts();
       setPosts(updatedPosts);
     } catch (error) {
@@ -91,6 +96,32 @@ const PostsPage: React.FC<{ adminRole: string }> = ({ adminRole }) => {
     input.click();
   };
 
+  const movePostUp = async (index: number) => {
+    if (index === 0) return; // Can't move the first post up
+    const updatedPosts = [...posts];
+    [updatedPosts[index - 1], updatedPosts[index]] = [updatedPosts[index], updatedPosts[index - 1]];
+    setPosts(updatedPosts);
+
+    try {
+      await updatePostsOrder(updatedPosts); // Persist the new order
+    } catch (error) {
+      console.error("Error updating posts order:", error);
+    }
+  };
+
+  const movePostDown = async (index: number) => {
+    if (index === posts.length - 1) return; // Can't move the last post down
+    const updatedPosts = [...posts];
+    [updatedPosts[index], updatedPosts[index + 1]] = [updatedPosts[index + 1], updatedPosts[index]];
+    setPosts(updatedPosts);
+
+    try {
+      await updatePostsOrder(updatedPosts); // Persist the new order
+    } catch (error) {
+      console.error("Error updating posts order:", error);
+    }
+  };
+
   if (loading) {
     return <div className="p-6">Loading posts...</div>;
   }
@@ -108,31 +139,36 @@ const PostsPage: React.FC<{ adminRole: string }> = ({ adminRole }) => {
       )}
       {posts.length > 0 ? (
         <div className="space-y-6">
-          {posts.map(post => (
+          {posts.map((post, index) => (
             <div 
               key={post.id}
               className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col md:flex-row items-center gap-6"
             >
-              {post.imageUrl && (
-                <div className="md:w-1/2">
+              <div className="md:w-1/2">
+                {post.imageUrl ? (
                   <img 
                     src={post.imageUrl} 
                     alt={post.header} 
                     className="w-full h-48 md:h-auto object-cover rounded-lg"
                   />
-                  {adminRole === 'superAdmin' && ( // Show only for superAdmin
-                    <button 
-                      className={`mt-2 px-4 py-2 rounded text-white ${uploadingPostId === post.id ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
-                      onClick={() => openFileManager(post.id)}
-                      disabled={uploadingPostId === post.id}
-                    >
-                      {uploadingPostId === post.id ? 'Uploading...' : 'Update Image'}
-                    </button>
-                  )}
-                </div>
-              )}
+                ) : (
+                  <div className="w-full h-48 md:h-auto bg-gray-200 flex items-center justify-center rounded-lg">
+                    <span className="text-gray-500">No Image</span>
+                  </div>
+                )}
+                {adminRole === 'superAdmin' && ( // Show only for superAdmin
+                  <button 
+                    className={`mt-2 px-4 py-2 rounded text-white ${uploadingPostId === post.id ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
+                    onClick={() => openFileManager(post.id)}
+                    disabled={uploadingPostId === post.id}
+                  >
+                    {uploadingPostId === post.id ? 'Uploading...' : 'Update Image'}
+                  </button>
+                )}
+              </div>
               <div className="md:w-1/2">
                 <h2 className="text-lg font-semibold mb-2">{post.header}</h2>
+                <p className="text-sm text-gray-500 mb-2">Section: {post.section}</p> {/* Display section */}
                 <div className="text-gray-600 mb-4">
                   {post.body.split('\n').map((paragraph: string, index: number) => (
                     <p key={index} className="mb-2">{paragraph}</p>
@@ -159,6 +195,24 @@ const PostsPage: React.FC<{ adminRole: string }> = ({ adminRole }) => {
                     >
                       Delete
                     </button>
+                    <div className="flex mt-2">
+                      {index > 0 && ( // Hide "Move Up" for the first post
+                        <button 
+                          onClick={() => movePostUp(index)} 
+                          className="px-2 py-1 bg-gray-300 text-black rounded hover:bg-gray-400 mr-2"
+                        >
+                          ↑ Move Up
+                        </button>
+                      )}
+                      {index < posts.length - 1 && ( // Hide "Move Down" for the last post
+                        <button 
+                          onClick={() => movePostDown(index)} 
+                          className="px-2 py-1 bg-gray-300 text-black rounded hover:bg-gray-400"
+                        >
+                          ↓ Move Down
+                        </button>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
@@ -181,8 +235,8 @@ const PostsPage: React.FC<{ adminRole: string }> = ({ adminRole }) => {
         <EditPostModal
           show={showEditModal}
           onClose={() => setShowEditModal(false)}
-          onSave={(header, body) => handleEditContent(postToEdit.id, header, body)}
-          postToEdit={postToEdit || { id: '', header: '', body: '' }}
+          onSave={(header, body, section) => handleEditContent(postToEdit.id, header, body, section)} // Pass section
+          postToEdit={postToEdit || { id: '', header: '', body: '', section: '' }}
         />
       )}
       {showDeleteModal && adminRole === 'superAdmin' && ( // Show only for superAdmin

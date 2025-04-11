@@ -4,8 +4,8 @@ interface PostModalProps {
   show: boolean;
   onClose: () => void;
   onAddPost: () => void;
-  newPost: { header: string; body: string; image: File | null };
-  setNewPost: (post: { header: string; body: string; image: File | null }) => void;
+  newPost: { header: string; body: string; image: File | null; section: string };
+  setNewPost: (post: { header: string; body: string; image: File | null; section: string }) => void;
 }
 
 const PostModal: React.FC<PostModalProps> = ({ show, onClose, onAddPost, newPost, setNewPost }) => {
@@ -56,6 +56,16 @@ const PostModal: React.FC<PostModalProps> = ({ show, onClose, onAddPost, newPost
           onChange={(e) => setNewPost({ ...newPost, body: e.target.value })} 
           className="w-full mb-4 p-2 border rounded"
         />
+        <select 
+          value={newPost.section} 
+          onChange={(e) => setNewPost({ ...newPost, section: e.target.value })} 
+          className="w-full mb-4 p-2 border rounded"
+        >
+          <option value="">Select Section</option>
+          <option value="blog">Blog</option>
+          <option value="home">Home</option>
+          <option value="about">About</option>
+        </select>
         <input 
           type="file" 
           onChange={(e) => setNewPost({ ...newPost, image: e.target.files ? e.target.files[0] : null })} 

@@ -26,11 +26,11 @@ export async function fetchPosts() {
 }
 
 // Function to add a post to the "sections" document in the "posts" collection
-export async function addPost(post: { header: string; body: string; image: File | null }) {
+export async function addPost(post: { header: string; body: string; image: File | null; section: string }) {
     try {
         // Validate post content
-        if (!post.header.trim() || !post.body.trim()) {
-            throw new Error("Header and body cannot be empty.");
+        if (!post.header.trim() || !post.body.trim() || !post.section.trim()) {
+            throw new Error("Header, body, and section cannot be empty.");
         }
 
         let imageUrl = null;
@@ -62,6 +62,7 @@ export async function addPost(post: { header: string; body: string; image: File 
             header: post.header,
             body: post.body,
             imageUrl,
+            section: post.section, // Add section field
             createdAt: new Date().toISOString(),
         };
 
@@ -171,29 +172,37 @@ export async function editPostImage(postId: string, newImage: File) {
 }
 
 // Function to edit the contents of a post
-export async function editPost(postId: string, updatedFields: { header: string; body: string }) {
-    const sectionsDocRef = doc(db, "posts", "sections");
-    const sectionsDoc = await getDoc(sectionsDocRef);
+export async function editPost(postId: string, updatedFields: { header: string; body: string; section: string }) {
+    try {
+        const sectionsDocRef = doc(db, "posts", "sections");
+        const sectionsDoc = await getDoc(sectionsDocRef);
 
-    if (!sectionsDoc.exists()) {
-        throw new Error("Sections document does not exist.");
+        if (!sectionsDoc.exists()) {
+            throw new Error("Sections document does not exist.");
+        }
+
+        const data = sectionsDoc.data();
+        const posts = data?.posts || [];
+        const postIndex = posts.findIndex((post: any) => post.id === postId);
+
+        if (postIndex === -1) {
+            throw new Error("Post not found.");
+        }
+
+        // Update the post with new fields
+        posts[postIndex] = {
+            ...posts[postIndex],
+            header: updatedFields.header,
+            body: updatedFields.body,
+            section: updatedFields.section, // Update section field
+        };
+
+        // Save the updated posts array back to Firestore
+        await setDoc(sectionsDocRef, { posts });
+    } catch (error) {
+        console.error("Error editing post:", error);
+        throw error;
     }
-
-    const data = sectionsDoc.data();
-    const posts = data?.posts || [];
-    const postIndex = posts.findIndex((post: any) => post.id === postId);
-
-    if (postIndex === -1) {
-        throw new Error("Post not found.");
-    }
-
-    posts[postIndex] = {
-        ...posts[postIndex],
-        header: updatedFields.header,
-        body: updatedFields.body,
-    };
-
-    await setDoc(sectionsDocRef, { posts });
 }
 
 // Function to set user role in the "roles" collection
@@ -276,6 +285,28 @@ export async function fetchUserRoleByEmail(email: string): Promise<string | null
         }
     } catch (error) {
         console.error("Error fetching user role by email:", error);
+        throw error;
+    }
+}
+
+/**
+ * Updates the order of posts in the "sections" document in the "posts" collection.
+ * @param updatedPosts - The rearranged array of posts.
+ */
+export async function updatePostsOrder(updatedPosts: any[]) {
+    try {
+        const sectionsDocRef = doc(db, "posts", "sections");
+
+        // Ensure the document exists before updating
+        const sectionsDoc = await getDoc(sectionsDocRef);
+        if (!sectionsDoc.exists()) {
+            throw new Error("Sections document does not exist.");
+        }
+
+        // Update the posts array with the new order
+        await setDoc(sectionsDocRef, { posts: updatedPosts });
+    } catch (error) {
+        console.error("Error updating posts order:", error);
         throw error;
     }
 }

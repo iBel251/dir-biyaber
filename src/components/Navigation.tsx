@@ -41,6 +41,14 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
               Home
             </Link>
             <Link
+              to="/blogs"
+              className={`text-gray-700 hover:text-orange-500 transition-colors duration-300 cursor-pointer whitespace-nowrap ${
+                location.pathname === "/blogs" ? "font-bold text-orange-500 underline underline-offset-4" : ""
+              }`}
+            >
+              Blogs
+            </Link>
+            <Link
               to="/about"
               className={`text-gray-700 hover:text-orange-500 transition-colors duration-300 cursor-pointer whitespace-nowrap ${
                 location.pathname === "/about" ? "font-bold text-orange-500 underline underline-offset-4" : ""
@@ -103,6 +111,15 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
               }`}
             >
               Home
+            </Link>
+            <Link
+              to="/blogs"
+              onClick={() => setIsMenuOpen(false)}
+              className={`block px-4 py-2 text-gray-700 hover:text-orange-500 transition-colors duration-300 ${
+                location.pathname === "/blogs" ? "font-bold text-orange-500 underline underline-offset-4" : ""
+              }`}
+            >
+              Blogs
             </Link>
             <Link
               to="/about"
