@@ -65,6 +65,7 @@ const PostModal: React.FC<PostModalProps> = ({ show, onClose, onAddPost, newPost
           <option value="blog">Blog</option>
           <option value="home">Home</option>
           <option value="about">About</option>
+          <option value="announcement">Announcement</option> {/* New option added */}
         </select>
         <input 
           type="file" 

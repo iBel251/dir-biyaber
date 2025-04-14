@@ -60,6 +60,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({ show, onClose, onSave, po
           <option value="blog">Blog</option>
           <option value="home">Home</option>
           <option value="about">About</option>
+          <option value="announcement">Announcement</option> {/* New option added */}
         </select>
         <div className="flex justify-end">
           <button

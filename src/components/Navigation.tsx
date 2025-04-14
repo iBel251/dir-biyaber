@@ -49,6 +49,12 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
               Blogs
             </Link>
             <Link
+              to="/announcement"
+              className={`text-gray-700 hover:text-orange-500 transition-colors duration-300 cursor-pointer whitespace-nowrap ${
+                location.pathname === "/announcement" ? "font-bold text-orange-500 underline underline-offset-4" : ""
+              }`}
+            >Announcements</Link>
+            <Link
               to="/about"
               className={`text-gray-700 hover:text-orange-500 transition-colors duration-300 cursor-pointer whitespace-nowrap ${
                 location.pathname === "/about" ? "font-bold text-orange-500 underline underline-offset-4" : ""
@@ -82,11 +88,10 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
             </Link>
 
             <div className="relative flex items-center space-x-2">
-              <i className="fas fa-globe text-gray-700"></i> {/* Icon for language selection */}
               <Select
                 options={languageOptions}
                 defaultValue={defaultOption} // Use persisted language
-                className="w-40"
+                className="w-28" // Adjust width for medium devices
                 isSearchable={false}
                 onChange={handleLanguageChange}
               />
@@ -121,6 +126,14 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
             >
               Blogs
             </Link>
+            <Link
+              to="/announcement"
+              onClick={() => setIsMenuOpen(false)}
+
+              className={`text-gray-700 hover:text-orange-500 transition-colors duration-300 cursor-pointer whitespace-nowrap ${
+                location.pathname === "/announcement" ? "font-bold text-orange-500 underline underline-offset-4" : ""
+              }`}
+            >Announcements</Link>
             <Link
               to="/about"
               onClick={() => setIsMenuOpen(false)}
@@ -163,7 +176,7 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
               <Select
                 options={languageOptions}
                 defaultValue={defaultOption} // Use persisted language
-                className="w-full"
+                className="w-28 md:w-24" // Adjust width for medium devices
                 isSearchable={false}
                 onChange={handleLanguageChange}
               />
