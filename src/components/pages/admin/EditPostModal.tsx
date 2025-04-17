@@ -3,20 +3,24 @@ import React, { useState, useEffect } from 'react';
 interface EditPostModalProps {
   show: boolean;
   onClose: () => void;
-  onSave: (header: string, body: string, section: string) => Promise<void>;
-  postToEdit: { id: string; header: string; body: string; section: string };
+  onSave: (header: string, body: string, section: string, amharicHeader?: string, amharicBody?: string) => Promise<void>;
+  postToEdit: { id: string; header: string; body: string; section: string; amharicHeader?: string; amharicBody?: string };
 }
 
 const EditPostModal: React.FC<EditPostModalProps> = ({ show, onClose, onSave, postToEdit }) => {
   const [header, setHeader] = useState(postToEdit.header);
   const [body, setBody] = useState(postToEdit.body);
   const [section, setSection] = useState(postToEdit.section);
+  const [amharicHeader, setAmharicHeader] = useState(postToEdit.amharicHeader || '');
+  const [amharicBody, setAmharicBody] = useState(postToEdit.amharicBody || '');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setHeader(postToEdit.header);
     setBody(postToEdit.body);
     setSection(postToEdit.section);
+    setAmharicHeader(postToEdit.amharicHeader || '');
+    setAmharicBody(postToEdit.amharicBody || '');
   }, [postToEdit]);
 
   if (!show) return null;
@@ -28,7 +32,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({ show, onClose, onSave, po
     }
     setSaving(true);
     try {
-      await onSave(header, body, section); // Pass section to onSave
+      await onSave(header, body, section, amharicHeader, amharicBody);
       onClose();
     } finally {
       setSaving(false);
@@ -37,20 +41,41 @@ const EditPostModal: React.FC<EditPostModalProps> = ({ show, onClose, onSave, po
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white p-6 rounded shadow-lg w-96">
+      <div className="bg-white p-6 rounded shadow-lg w-[42rem] max-h-screen overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Edit Post</h2>
+        <label className="block mb-1 font-medium text-blue-600">Header</label>
         <input
           type="text"
           value={header}
           onChange={(e) => setHeader(e.target.value)}
           className="w-full mb-4 p-2 border rounded"
+          placeholder="Header"
         />
+        <label className="block mb-1 font-medium text-blue-600">Body</label>
         <textarea
           value={body}
           rows={8}
           onChange={(e) => setBody(e.target.value)}
           className="w-full mb-4 p-2 border rounded"
+          placeholder="Body"
         />
+        <label className="block mb-1 font-medium text-blue-600">Amharic Header (optional)</label>
+        <input
+          type="text"
+          value={amharicHeader}
+          onChange={(e) => setAmharicHeader(e.target.value)}
+          className="w-full mb-4 p-2 border rounded"
+          placeholder="Amharic Header (optional)"
+        />
+        <label className="block mb-1 font-medium text-blue-600">Amharic Body (optional)</label>
+        <textarea
+          value={amharicBody}
+          rows={8}
+          onChange={(e) => setAmharicBody(e.target.value)}
+          className="w-full mb-4 p-2 border rounded"
+          placeholder="Amharic Body (optional)"
+        />
+        <label className="block mb-1 font-medium text-blue-600">Section</label>
         <select
           value={section}
           onChange={(e) => setSection(e.target.value)}
@@ -60,7 +85,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({ show, onClose, onSave, po
           <option value="blog">Blog</option>
           <option value="home">Home</option>
           <option value="about">About</option>
-          <option value="announcement">Announcement</option> {/* New option added */}
+          <option value="announcement">Announcement</option>
         </select>
         <div className="flex justify-end">
           <button

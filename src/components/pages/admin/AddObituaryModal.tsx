@@ -86,31 +86,23 @@ const AddObituaryModal: React.FC<AddObituaryModalProps> = ({ onClose, onSave }) 
           </div>
           <div>
             <label htmlFor="birthYear" className="block text-sm font-medium text-gray-700 mb-1">Birth Year</label>
-            <select
+            <input
+              type="number"
               id="birthYear"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               value={formData.birthYear}
               onChange={(e) => setFormData({ ...formData, birthYear: e.target.value })}
-            >
-              <option value="">Select Year</option>
-              {Array.from({ length: 120 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+            />
           </div>
           <div>
-            <label htmlFor="deathDate" className="block text-sm font-medium text-gray-700 mb-1">Year of Passing</label>
-            <select
+            <label htmlFor="deathDate" className="block text-sm font-medium text-gray-700 mb-1">Date of Passing</label>
+            <input
+              type="date"
               id="deathDate"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               value={formData.deathDate}
               onChange={(e) => setFormData({ ...formData, deathDate: e.target.value })}
-            >
-              <option value="">Select Year</option>
-              {Array.from({ length: 120 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+            />
           </div>
           <div>
             <label htmlFor="number" className="block text-sm font-medium text-gray-700 mb-1">Number</label>

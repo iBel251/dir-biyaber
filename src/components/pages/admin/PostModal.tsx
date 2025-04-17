@@ -4,8 +4,8 @@ interface PostModalProps {
   show: boolean;
   onClose: () => void;
   onAddPost: () => void;
-  newPost: { header: string; body: string; image: File | null; section: string };
-  setNewPost: (post: { header: string; body: string; image: File | null; section: string }) => void;
+  newPost: { header: string; body: string; image: File | null; section: string; amharicHeader?: string; amharicBody?: string };
+  setNewPost: (post: { header: string; body: string; image: File | null; section: string; amharicHeader?: string; amharicBody?: string }) => void;
 }
 
 const PostModal: React.FC<PostModalProps> = ({ show, onClose, onAddPost, newPost, setNewPost }) => {
@@ -14,8 +14,8 @@ const PostModal: React.FC<PostModalProps> = ({ show, onClose, onAddPost, newPost
   if (!show) return null;
 
   const handleAddPost = async () => {
-    if (!newPost.header.trim() || !newPost.body.trim()) {
-      alert("Header and body cannot be empty.");
+    if (!newPost.header.trim() || !newPost.body.trim() || !newPost.section.trim()) {
+      alert("Header, body, and section cannot be empty.");
       return;
     }
 
@@ -56,6 +56,19 @@ const PostModal: React.FC<PostModalProps> = ({ show, onClose, onAddPost, newPost
           onChange={(e) => setNewPost({ ...newPost, body: e.target.value })} 
           className="w-full mb-4 p-2 border rounded"
         />
+        <input 
+          type="text" 
+          placeholder="Amharic Header (optional)" 
+          value={newPost.amharicHeader || ''} 
+          onChange={(e) => setNewPost({ ...newPost, amharicHeader: e.target.value })} 
+          className="w-full mb-4 p-2 border rounded"
+        />
+        <textarea 
+          placeholder="Amharic Body (optional)" 
+          value={newPost.amharicBody || ''} 
+          onChange={(e) => setNewPost({ ...newPost, amharicBody: e.target.value })} 
+          className="w-full mb-4 p-2 border rounded"
+        />
         <select 
           value={newPost.section} 
           onChange={(e) => setNewPost({ ...newPost, section: e.target.value })} 
@@ -65,7 +78,7 @@ const PostModal: React.FC<PostModalProps> = ({ show, onClose, onAddPost, newPost
           <option value="blog">Blog</option>
           <option value="home">Home</option>
           <option value="about">About</option>
-          <option value="announcement">Announcement</option> {/* New option added */}
+          <option value="announcement">Announcement</option>
         </select>
         <input 
           type="file" 

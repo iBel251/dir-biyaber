@@ -26,7 +26,7 @@ export async function fetchPosts() {
 }
 
 // Function to add a post to the "sections" document in the "posts" collection
-export async function addPost(post: { header: string; body: string; image: File | null; section: string }) {
+export async function addPost(post: { header: string; body: string; image: File | null; section: string; amharicHeader?: string; amharicBody?: string }) {
     try {
         // Validate post content
         if (!post.header.trim() || !post.body.trim() || !post.section.trim()) {
@@ -63,6 +63,8 @@ export async function addPost(post: { header: string; body: string; image: File 
             body: post.body,
             imageUrl,
             section: post.section, // Add section field
+            amharicHeader: post.amharicHeader || null, // Save as null if not provided
+            amharicBody: post.amharicBody || null,     // Save as null if not provided
             createdAt: new Date().toISOString(),
         };
 
@@ -172,7 +174,7 @@ export async function editPostImage(postId: string, newImage: File) {
 }
 
 // Function to edit the contents of a post
-export async function editPost(postId: string, updatedFields: { header: string; body: string; section: string }) {
+export async function editPost(postId: string, updatedFields: { header: string; body: string; section: string; amharicHeader?: string; amharicBody?: string }) {
     try {
         const sectionsDocRef = doc(db, "posts", "sections");
         const sectionsDoc = await getDoc(sectionsDocRef);
@@ -189,12 +191,14 @@ export async function editPost(postId: string, updatedFields: { header: string; 
             throw new Error("Post not found.");
         }
 
-        // Update the post with new fields
+        // Update the post with new fields, including Amharic fields
         posts[postIndex] = {
             ...posts[postIndex],
             header: updatedFields.header,
             body: updatedFields.body,
-            section: updatedFields.section, // Update section field
+            section: updatedFields.section,
+            amharicHeader: updatedFields.amharicHeader || null, // Save as null if not provided
+            amharicBody: updatedFields.amharicBody || null,     // Save as null if not provided
         };
 
         // Save the updated posts array back to Firestore

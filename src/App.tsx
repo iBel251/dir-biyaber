@@ -49,13 +49,13 @@ function App() {
               <div className="content">
                 <Routes>
                   <Route path="/" element={<Home language={language}/>} /> {/* Home route */}
-                  <Route path="/blogs" element={<Posts />} /> {/* Add Blogs route */}
+                  <Route path="/blogs" element={<Posts language={language} />} /> {/* Add Blogs route */}
                   <Route path="/about" element={<About language={language} />} /> {/* Pass language to About */}
                   <Route path="/contact-us" element={<ContactUs />} /> {/* Contact Us route */}
                   <Route path="/obituary" element={<Obituary />} /> {/* Obituary route */}
                   <Route path="/bylaws" element={<Bylaws />} /> {/* Bylaws route */}
                   <Route path="/adminLogin" element={<Admin />} /> {/* Admin route */}
-                  <Route path="/announcement" element={<Announcement />} /> {/* Announcement route */}
+                  <Route path="/announcement" element={<Announcement language={language} />} /> {/* Announcement route */}
                 </Routes>
               </div>
               <Footer />

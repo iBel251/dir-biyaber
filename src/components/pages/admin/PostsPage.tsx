@@ -73,9 +73,9 @@ const PostsPage: React.FC<{ adminRole: string }> = ({ adminRole }) => {
     }
   };
 
-  const handleEditContent = async (postId: string, header: string, body: string, section: string) => {
+  const handleEditContent = async (postId: string, header: string, body: string, section: string, amharicHeader?: string, amharicBody?: string) => {
     try {
-      await editPost(postId, { header, body, section }); // Include section
+      await editPost(postId, { header, body, section, amharicHeader, amharicBody }); // Include Amharic fields
       const updatedPosts = await fetchPosts();
       setPosts(updatedPosts);
     } catch (error) {
@@ -235,8 +235,10 @@ const PostsPage: React.FC<{ adminRole: string }> = ({ adminRole }) => {
         <EditPostModal
           show={showEditModal}
           onClose={() => setShowEditModal(false)}
-          onSave={(header, body, section) => handleEditContent(postToEdit.id, header, body, section)} // Pass section
-          postToEdit={postToEdit || { id: '', header: '', body: '', section: '' }}
+          onSave={(header, body, section, amharicHeader, amharicBody) =>
+            handleEditContent(postToEdit.id, header, body, section, amharicHeader, amharicBody)
+          } // Pass Amharic fields
+          postToEdit={postToEdit || { id: '', header: '', body: '', section: '', amharicHeader: '', amharicBody: '' }}
         />
       )}
       {showDeleteModal && adminRole === 'superAdmin' && ( // Show only for superAdmin

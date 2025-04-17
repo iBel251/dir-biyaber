@@ -146,19 +146,20 @@ const App: React.FC = () => {
               {filteredObituaries.map(obituary => (
                 <div 
                   key={obituary.id} 
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center transition-transform duration-300 hover:transform hover:-translate-y-1 hover:shadow-md"
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-2 flex flex-col items-center transition-transform duration-300 hover:transform hover:-translate-y-1 hover:shadow-md"
                 >
-                  <div className="w-32 h-32 rounded-full overflow-hidden mb-4 border-2 border-gray-100">
+                  <div className="w-48 h-48 rounded-full overflow-hidden border-2 border-gray-100">
                     <img 
                       src={obituary.imageUrl || '/placeholder.jpg'} 
                       alt={obituary.nameEn} 
                       className="w-full h-full object-cover object-top"
                     />
                   </div>
-                  <span className="text-xs text-gray-500 mb-2">{obituary.number}</span>
+                  <span className="text-xs text-gray-500 mt-4">{obituary.number}</span>
                   <h3 className="text-xl font-semibold text-gray-800 text-center mb-1">{obituary.nameEn}</h3>
                   <h4 className="text-lg font-medium text-gray-600 text-center mb-3">{obituary.nameAm}</h4>
-                  <p className="text-gray-600 mb-3 text-center">{`${obituary.birthYear} - ${obituary.deathDate}`}</p>
+                  <p className="text-gray-600 mb-1 text-center">Born: {obituary.birthYear}</p>
+                  <p className="text-gray-600 mb-3 text-center">Died: {new Date(obituary.deathDate).toLocaleDateString()}</p>
                 </div>
               ))}
             </div>

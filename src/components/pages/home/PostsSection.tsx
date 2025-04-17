@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchPosts } from '../../../firebase/firebaseAdminServices';
 
-const PostsSection: React.FC = () => {
+const PostsSection: React.FC<{ language: string }> = ({ language }) => {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,12 +52,16 @@ const PostsSection: React.FC = () => {
                   </div>
                 )}
                 <div className="md:w-2/3 flex-grow w-full">
-                  <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-800">{post.header}</h2>
-                  {post.body.split('\n').map((paragraph: string, idx: number) => (
-                    <p key={idx} className="text-gray-600 text-lg mb-6 leading-normal text-justify">
-                      {paragraph}
-                    </p>
-                  ))}
+                  <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-800">
+                    {language === 'am' && post.amharicHeader ? post.amharicHeader : post.header}
+                  </h2>
+                  {(language === 'am' && post.amharicBody ? post.amharicBody : post.body)
+                    .split('\n')
+                    .map((paragraph: string, idx: number) => (
+                      <p key={idx} className="text-gray-600 text-lg mb-6 leading-normal text-justify">
+                        {paragraph}
+                      </p>
+                    ))}
                 </div>
               </div>
               {index < posts.length - 1 && (
