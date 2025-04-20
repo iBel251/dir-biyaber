@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import Portal from './components/pages/admin/Portal';
 import Posts from './components/pages/blogs/Posts'; // Import the Posts component
 import Announcement from './components/pages/announcements/announcement';
+import Forms from './components/pages/forms/Forms'; // Import the Forms component
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './App.css'; // Import the CSS file for styling
 
@@ -56,6 +57,7 @@ function App() {
                   <Route path="/bylaws" element={<Bylaws />} /> {/* Bylaws route */}
                   <Route path="/adminLogin" element={<Admin />} /> {/* Admin route */}
                   <Route path="/announcement" element={<Announcement language={language} />} /> {/* Announcement route */}
+                  <Route path="/forms" element={<Forms language={language} />} /> {/* Forms route with language prop */}
                 </Routes>
               </div>
               <Footer />

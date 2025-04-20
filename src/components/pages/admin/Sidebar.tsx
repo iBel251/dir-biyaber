@@ -50,6 +50,24 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarCollapsed, setSidebarCollapsed
               <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Posts</span>
             </button>
           </li>
+          <li>
+            <button 
+              onClick={() => setActiveItem('forms')}
+              className={`flex items-center w-full px-4 py-3 ${activeItem === 'forms' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
+            >
+              <i className="fas fa-file-alt w-5"></i>
+              <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Forms</span>
+            </button>
+          </li>
+          <li>
+            <button 
+              onClick={() => setActiveItem('members')}
+              className={`flex items-center w-full px-4 py-3 ${activeItem === 'members' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
+            >
+              <i className="fas fa-id-card w-5"></i>
+              <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Members</span>
+            </button>
+          </li>
           {adminRole === 'superAdmin' && ( // Show only for superAdmin
             <li>
               <button 

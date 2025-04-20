@@ -71,6 +71,14 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
               Bylaws
             </Link>
             <Link
+              to="/forms"
+              className={`text-gray-700 hover:text-orange-500 transition-colors duration-300 cursor-pointer whitespace-nowrap ${
+                location.pathname === "/forms" ? "font-bold text-orange-500 underline underline-offset-4" : ""
+              }`}
+            >
+              Forms
+            </Link>
+            <Link
               to="/obituary"
               className={`text-gray-700 hover:text-orange-500 transition-colors duration-300 cursor-pointer whitespace-nowrap ${
                 location.pathname === "/obituary" ? "font-bold text-orange-500 underline underline-offset-4" : ""
@@ -151,6 +159,14 @@ const Navigation: React.FC<{ onLanguageChange: (lang: string) => void }> = ({ on
               }`}
             >
               Bylaws
+            </Link>
+            <Link
+              to="/forms"
+              onClick={() => setIsMenuOpen(false)}
+              className={`block px-4 py-2 text-gray-700 hover:text-orange-500 transition-colors duration-300 ${
+                location.pathname === "/forms" ? "font-bold text-orange-500 underline underline-offset-4" : ""}`}
+            >
+              Forms
             </Link>
             <Link
               to="/obituary"

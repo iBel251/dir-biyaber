@@ -13,6 +13,8 @@ import BoardMemberModal from './BoardMemberModal';
 import PostsPage from './PostsPage';
 import AdminRoleManagement from './AdminRoleManagement';
 import { fetchUserRoleByEmail } from '../../../firebase/firebaseAdminServices';
+import FormsPage from './FormsPage';
+import MembersPage from './members/MembersPage';
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -70,6 +72,10 @@ const App: React.FC = () => {
         return <BoardMemberModal adminRole={adminRole} />; // Pass adminRole
       case 'admin-roles':
         return <AdminRoleManagement />;
+      case 'forms':
+        return <FormsPage />;
+      case 'members':
+        return <MembersPage />;
       default:
         return <div>Page not found</div>;
     }

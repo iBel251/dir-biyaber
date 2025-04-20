@@ -68,13 +68,13 @@ const App: React.FC<{ language: string }> = ({ language }) => {
         {/* Main Header */}
         <section className="py-8 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="amharic-text text-3xl md:text-4xl text-blue-900 relative inline-block">
-                የድር ቢያብር እድር መረዳጃና መደራጃ ማህበር በሎስ አንጀለስ ድህረ ገጽ
-              <span className="absolute left-1/2 transform -translate-x-1/2 bottom-0 w-36 h-2 bg-orange-500 mt-4"></span>
+            <h1 className="amharic-text text-3xl md:text-4xl text-blue-900 relative inline-block mb-2">
+              {language === 'am'
+                ? 'የድር ቢያብር እድር መረዳጃና መደራጃ ማህበር በሎስ አንጀለስ ድህረ ገጽ'
+                : 'Dir Biyaber Edir Mutual Assistance Association in Los Angeles Website'}
             </h1>
           </div>
         </section>
-
 
         {/* Posts Section */}
         <section 
