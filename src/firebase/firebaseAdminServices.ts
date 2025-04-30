@@ -314,3 +314,146 @@ export async function updatePostsOrder(updatedPosts: any[]) {
         throw error;
     }
 }
+
+// Function to add a form to the "forms" document in the "posts" collection
+export async function addForm(form: { nameAm: string; nameEn: string; file: File; description: string }) {
+    try {
+        // Validate form fields
+        if (!form.nameAm.trim() || !form.nameEn.trim() || !form.file) {
+            throw new Error("Form name (Amharic), name (English), and file are required.");
+        }
+
+        // Validate file type (PDF, DOC, DOCX)
+        const validFileTypes = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ];
+        if (!validFileTypes.includes(form.file.type)) {
+            throw new Error("Invalid file type. Only PDF, DOC, and DOCX are allowed.");
+        }
+        if (form.file.size > 10 * 1024 * 1024) { // 10MB limit
+            throw new Error("File size must be less than 10MB.");
+        }
+
+        // Use English form name for file name in storage
+        const extension = form.file.name.split('.').pop();
+        const sanitizedEnName = form.nameEn.replace(/[^a-zA-Z0-9-_ ]/g, '').replace(/\s+/g, '_');
+        const fileNameForStorage = `${sanitizedEnName}_${Date.now()}.${extension}`;
+        const storageRef = ref(getStorage(), `forms/${fileNameForStorage}`);
+        const snapshot = await uploadBytes(storageRef, form.file);
+        const fileUrl = await getDownloadURL(snapshot.ref);
+
+        // Reference to the "forms" document in the "posts" collection
+        const formsDocRef = doc(db, "posts", "forms");
+        const formsDoc = await getDoc(formsDocRef);
+
+        const newForm = {
+            id: uuidv4(),
+            nameAm: form.nameAm,
+            nameEn: form.nameEn,
+            fileUrl,
+            fileName: `${sanitizedEnName}.${extension}`,
+            description: form.description,
+            createdAt: new Date().toISOString(),
+        };
+
+        if (!formsDoc.exists()) {
+            // If the document doesn't exist, create it with an initial array
+            await setDoc(formsDocRef, {
+                forms: [newForm],
+            });
+        } else {
+            // If the document exists, update it by appending the new form
+            await updateDoc(formsDocRef, {
+                forms: arrayUnion(newForm),
+            });
+        }
+    } catch (error) {
+        console.error("Error adding form:", error);
+        throw error;
+    }
+}
+
+// Function to fetch all forms from the "forms" document in the "posts" collection
+export async function fetchForms() {
+    try {
+        const formsDocRef = doc(db, "posts", "forms");
+        const formsDoc = await getDoc(formsDocRef);
+        if (!formsDoc.exists()) {
+            return [];
+        }
+        const data = formsDoc.data();
+        return data?.forms || [];
+    } catch (error) {
+        console.error("Error fetching forms:", error);
+        throw error;
+    }
+}
+
+// Function to remove a form from the "forms" document in the "posts" collection
+export async function removeForm(formId: string) {
+    try {
+        const formsDocRef = doc(db, "posts", "forms");
+        const formsDoc = await getDoc(formsDocRef);
+        if (!formsDoc.exists()) {
+            throw new Error("Forms document does not exist.");
+        }
+        const data = formsDoc.data();
+        const forms = data?.forms || [];
+        const formToRemove = forms.find((f: any) => f.id === formId);
+        if (!formToRemove) {
+            throw new Error("Form not found.");
+        }
+        // Remove file from storage
+        if (formToRemove.fileUrl) {
+            try {
+                const storage = getStorage();
+                // Extract the path after the storage bucket domain
+                const url = new URL(formToRemove.fileUrl);
+                const pathStart = url.pathname.indexOf('/o/') + 3;
+                const pathEnd = url.pathname.indexOf('?');
+                let filePath = decodeURIComponent(url.pathname.substring(pathStart));
+                if (filePath.endsWith('.pdf') || filePath.endsWith('.doc') || filePath.endsWith('.docx')) {
+                  // do nothing, filePath is correct
+                }
+                const fileRef = ref(storage, filePath);
+                await deleteObject(fileRef);
+            } catch (e) {
+                // Ignore storage deletion errors
+            }
+        }
+        // Remove form from array
+        const updatedForms = forms.filter((f: any) => f.id !== formId);
+        await setDoc(formsDocRef, { forms: updatedForms });
+    } catch (error) {
+        console.error("Error removing form:", error);
+        throw error;
+    }
+}
+
+// Function to edit the names and description of a form in the "forms" document in the "posts" collection
+export async function editForm(formId: string, updatedFields: { nameAm?: string; nameEn?: string; description?: string }) {
+    try {
+        const formsDocRef = doc(db, "posts", "forms");
+        const formsDoc = await getDoc(formsDocRef);
+        if (!formsDoc.exists()) {
+            throw new Error("Forms document does not exist.");
+        }
+        const data = formsDoc.data();
+        const forms = data?.forms || [];
+        const formIndex = forms.findIndex((f: any) => f.id === formId);
+        if (formIndex === -1) {
+            throw new Error("Form not found.");
+        }
+        // Update the form fields
+        forms[formIndex] = {
+            ...forms[formIndex],
+            ...updatedFields,
+        };
+        await setDoc(formsDocRef, { forms });
+    } catch (error) {
+        console.error("Error editing form:", error);
+        throw error;
+    }
+}
