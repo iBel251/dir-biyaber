@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AddMemberModal from './AddMemberModal';
 import MembersTable from './MembersTable';
-import { fetchMembers } from '../../../../firebase/firebaseMembersServices';
+import { fetchMembers, uploadMembersFromCSV } from '../../../../firebase/firebaseMembersServices';
 import MemberDetailPage from './MemberDetailPage';
 import MembersSearchBar from './MembersSearchBar';
 import MembersPagination from './MembersPagination';
+import oldMembers from './OldMembers';
+import OldMembers from './OldMembers';
 
 const PAGE_SIZE = 20;
 
@@ -16,6 +18,7 @@ const MembersPage: React.FC = () => {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
 
   const getMembers = async () => {
     setLoading(true);
@@ -27,6 +30,21 @@ const MembersPage: React.FC = () => {
       setError('Failed to fetch members');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCsvUpload = async () => {
+    if (!csvFile) {
+      alert('Please select a CSV file first.');
+      return;
+    }
+    try {
+      await uploadMembersFromCSV(csvFile);
+      alert('CSV data successfully uploaded.');
+      getMembers(); // Refresh members list after upload
+    } catch (error) {
+      console.error('Error uploading CSV:', error);
+      alert('Failed to upload CSV data.');
     }
   };
 
@@ -63,6 +81,19 @@ const MembersPage: React.FC = () => {
       <h1 className="text-2xl font-bold mb-4">Members</h1>
       {!selectedMemberId && (
         <>
+          {/* <div className="mb-4">
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setCsvFile(e.target.files ? e.target.files[0] : null)}
+            />
+            <button
+              className="ml-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              onClick={handleCsvUpload}
+            >
+              Upload CSV
+            </button>
+          </div> */}
           <MembersSearchBar searchText={searchText} setSearchText={setSearchText} />
           <MembersPagination
             currentPage={currentPage}
@@ -99,6 +130,7 @@ const MembersPage: React.FC = () => {
           onBack={() => setSelectedMemberId(null)}
         />
       )}
+      <OldMembers />
     </div>
   );
 };

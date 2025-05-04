@@ -58,10 +58,10 @@ const Hero: React.FC<{ language: string }> = ({ language }) => {
             {language === "en" ? "Learn More" : "ተጨማሪ መረጃ"}
           </Link>
           <Link 
-            to="/contact-us" 
+            to="/member-registration" 
             className="amharic-text bg-transparent border-2 border-white text-white hover:bg-white/10 px-8 py-3 rounded-lg text-lg font-medium transition-all duration-300 cursor-pointer !rounded-button whitespace-nowrap"
           >
-            {language === "en" ? "Join Us" : "ይቀላቀሉን"}
+            {language === "en" ? "Update Member Profile " : "የአባላት መረጃ መሰብሰቢያ"}
           </Link>
         </div>
       </div>
