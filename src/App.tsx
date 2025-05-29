@@ -13,6 +13,7 @@ import Posts from './components/pages/blogs/Posts'; // Import the Posts componen
 import Announcement from './components/pages/announcements/announcement';
 import Forms from './components/pages/forms/Forms'; // Import the Forms component
 import MemberRegistrationPage from './components/pages/memberRegistration/MemberRegistrationPage' // Import the Member Registration component
+import Temp from './components/pages/admin/temp/Temp'; // Import the Temp component
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './App.css'; // Import the CSS file for styling
 
@@ -60,6 +61,7 @@ function App() {
                   <Route path="/announcement" element={<Announcement language={language} />} /> {/* Announcement route */}
                   <Route path="/forms" element={<Forms language={language} />} /> {/* Forms route with language prop */}
                   <Route path="/member-registration" element={<MemberRegistrationPage />} /> {/* Member Registration route */}
+                  <Route path="/temp" element={<Temp />} /> {/* Temp route */}
                 </Routes>
               </div>
               <Footer />

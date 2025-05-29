@@ -1,25 +1,7 @@
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, writeBatch, addDoc, query, orderBy, limit, startAfter, where, QuerySnapshot, DocumentData, Query, DocumentSnapshot } from "firebase/firestore";
+import {  collection, getDocs, doc, getDoc, setDoc, addDoc, query, orderBy, limit, startAfter, QuerySnapshot, DocumentData, Query, DocumentSnapshot, deleteDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
-import Papa from "papaparse";
-import { v4 as uuidv4 } from "uuid";
 
-// MOCK: Return 100 fake members for UI testing
-export async function fetchMembers2() {
-  return Array.from({ length: 113 }, (_, i) => ({
-    id: `ID${i + 1}`,
-    firstName: `First${i + 1}`,
-    lastName: `Last${i + 1}`,
-    firstNameAmharic: `አማርኛ${i + 1}`,
-    lastNameAmharic: `አማርኛ${i + 1}`,
-    dateOfBirth: `1990-01-${String((i % 28) + 1).padStart(2, '0')}`,
-    address: `Address ${i + 1}`,
-    email: `user${i + 1}@example.com`,
-    phone: `0912${String(100000 + i).slice(-6)}`,
-    payments: [],
-  }));
-}
 
-// REAL: Fetch all members from Firestore
 export async function fetchMembers() {
   try {
     const membersCol = collection(db, "members");
@@ -45,7 +27,11 @@ export async function addMember(member: {
   firstNameAmharic: string;
   lastNameAmharic: string;
   dateOfBirth: string;
-  address: string;
+  addressLine1: string;
+  apartment: string;
+  city: string;
+  state: string;
+  zipCode: string;
   email: string;
   phone: string;
   payments?: Array<{
@@ -57,18 +43,20 @@ export async function addMember(member: {
   }>;
 }) {
   try {
-    const memberDocRef = doc(db, "members", member.id);
+    const memberDocRef = doc(db, "membersListOld", member.id);
     const memberDoc = await getDoc(memberDocRef);
     if (memberDoc.exists()) {
       throw new Error("A member with this ID already exists.");
     }
     await setDoc(memberDocRef, {
-      firstName: member.firstName,
-      lastName: member.lastName,
-      firstNameAmharic: member.firstNameAmharic,
-      lastNameAmharic: member.lastNameAmharic,
+      fullName: `${member.firstName} ${member.lastName}`, // Combine first and last name for English
+      fullNameAm: `${member.firstNameAmharic} ${member.lastNameAmharic}`, // Combine first and last name for Amharic
       dateOfBirth: member.dateOfBirth,
-      address: member.address,
+      addressLine1: member.addressLine1,
+      apartment: member.apartment,
+      city: member.city,
+      state: member.state,
+      zipCode: member.zipCode,
       email: member.email,
       phone: member.phone,
       payments: member.payments || [],
@@ -80,71 +68,6 @@ export async function addMember(member: {
   }
 }
 
-/**
- * Reads a CSV file from an input element and uploads the data to Firestore under the collection "membersListOld".
- * Handles large datasets efficiently.
- * @param file - The CSV file selected by the user.
- */
-export async function uploadMembersFromCSV(file: File) {
-  try {
-    // const fileContent = await new Promise<string>((resolve, reject) => {
-    //   const reader = new FileReader();
-    //   reader.onload = () => resolve(reader.result as string);
-    //   reader.onerror = () => reject(reader.error);
-    //   reader.readAsText(file);
-    // });
-
-    // const records = Papa.parse(fileContent, {
-    //   header: true,
-    //   skipEmptyLines: true,
-    //   transformHeader: (header) => header.replace(/\s+/g, ' ').trim(),
-    // }).data;
-
-    // const formattedRecords = records.map((record: any) => ({
-    //   id: record["id"] || uuidv4(),
-    //   fullName: record["Full name"] || "",
-    //   fullNameAm: record["ሙሉ ስም"] || record["Full name"] || "",
-    //   phone: record["ስልክ ቁጥር"] || "",
-    //   additionalFields: {
-    //     "120": record["120"] || null,
-    //     "121": record["121"] || null,
-    //     "122": record["122"] || null,
-    //     "123": record["123"] || null,
-    //     "124": record["124"] || null,
-    //     "125": record["125"] || null,
-    //     "126": record["126"] || null,
-    //     "127": record["127"] || null,
-    //     "128": record["128"] || null,
-    //     "129": record["129"] || null,
-    //     "130": record["130"] || null,
-    //   },
-    // }));
-
-    // const batchSize = 500;
-    // for (let i = 0; i < formattedRecords.length; i += batchSize) {
-    //   const batch = writeBatch(db);
-    //   const chunk = formattedRecords.slice(i, i + batchSize);
-
-    //   chunk.forEach((record: { id: string; fullName: string; fullNameAm: string; phone: string; additionalFields: Record<string, any> }) => {
-    //     const docRef = doc(db, "membersListOld", record.id);
-    //     batch.set(docRef, {
-    //       fullName: record.fullName,
-    //       fullNameAm: record.fullNameAm,
-    //       phone: record.phone,
-    //       additionalFields: record.additionalFields,
-    //       createdAt: new Date().toISOString(),
-    //     });
-    //   });
-
-    //   await batch.commit();
-    // }
-
-    console.log("CSV data successfully uploaded to Firestore.");
-  } catch (error) {
-    console.error("Error uploading CSV data to Firestore:", error);
-    throw error;
-  }
-}
 
 /**
  * Fetches all documents from the "membersListOld" collection through pagination.
@@ -196,13 +119,8 @@ export async function saveMemberData(memberData: {
   try {
     const membersCollectionRef = collection(db, "membersAddedData"); // Reference to the collection
     const docRef = await addDoc(membersCollectionRef, {
-      firstName: memberData.firstName,
-      lastName: memberData.lastName,
-      membershipId: memberData.membershipId, // Use membershipId consistently
-      email: memberData.email,
-      gender: memberData.gender,
-      address: memberData.address,
-      phone: memberData.phone,
+      ...memberData,
+      
       createdAt: new Date().toISOString(),
     });
 
@@ -212,6 +130,44 @@ export async function saveMemberData(memberData: {
     console.log("Member data saved successfully with document ID.");
   } catch (error) {
     console.error("Error saving member data:", error);
+    throw error;
+  }
+}
+
+/**
+ * Updates a member in the "membersListOld" collection.
+ * Accepts the member ID and the updated data, including new fields.
+ * @param id - The ID of the member document to update.
+ * @param updatedData - The updated data for the member, including new fields.
+ */
+export async function updateMember(id: string, updatedData: Record<string, any>) {
+  try {
+    const memberDocRef = doc(db, "membersListOld", id);
+
+    // Update the document with the new data, merging it with the existing data
+    await setDoc(memberDocRef, updatedData, { merge: true });
+
+    console.log(`Member with ID ${id} updated successfully.`);
+  } catch (error) {
+    console.error(`Error updating member with ID ${id}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Deletes a member from the "membersListOld" collection.
+ * @param id - The ID of the member document to delete.
+ */
+export async function deleteMember(id: string): Promise<void> {
+  try {
+    const memberDocRef = doc(db, "membersListOld", id);
+
+    // Delete the document with the specified ID
+    await deleteDoc(memberDocRef);
+
+    console.log(`Member with ID ${id} deleted successfully.`);
+  } catch (error) {
+    console.error(`Error deleting member with ID ${id}:`, error);
     throw error;
   }
 }

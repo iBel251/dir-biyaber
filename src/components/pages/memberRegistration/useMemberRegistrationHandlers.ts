@@ -13,6 +13,8 @@ export const useMemberRegistrationHandlers = () => {
     state: "California", // Default value
     apartment: "",
     phone: "",
+    zipCode: "", // Add zipCode to formData
+    status: "new", // Always include status: 'new' in formData
   });
 
   const [errors, setErrors] = useState({
@@ -26,6 +28,7 @@ export const useMemberRegistrationHandlers = () => {
     state: "", // Added state field
     apartment: "", // Added apartment field
     phone: "",
+    zipCode: "", // Add zipCode to errors
   });
 
   const handleChange = (
@@ -115,11 +118,26 @@ export const useMemberRegistrationHandlers = () => {
       isValid = false;
     }
 
+    // Validate City
+    if (!formData.city.trim()) {
+      newErrors.city = "City is required";
+      isValid = false;
+    }
+
+    // Validate State
+    if (!formData.state.trim()) {
+      newErrors.state = "State is required";
+      isValid = false;
+    }
+
+    // Validate Zip Code
+    if (!formData.zipCode.trim()) {
+      newErrors.zipCode = "Zip code is required";
+      isValid = false;
+    }
+
     // Validate Phone
-    if (
-      !formData.phone.trim() ||
-      formData.phone.replace(/\D/g, "").length < 10
-    ) {
+    if (!formData.phone.trim() || formData.phone.replace(/\D/g, "").length < 10) {
       newErrors.phone = "Valid phone number is required";
       isValid = false;
     }

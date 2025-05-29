@@ -15,6 +15,8 @@ import AdminRoleManagement from './AdminRoleManagement';
 import { fetchUserRoleByEmail } from '../../../firebase/firebaseAdminServices';
 import FormsPage from './FormsPage';
 import MembersPage from './members/MembersPage';
+import AddedDataPage from './addedDataPage/AddedDataPage'
+import Payments from './payments/Payments';
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -75,7 +77,12 @@ const App: React.FC = () => {
       case 'forms':
         return <FormsPage />;
       case 'members':
-        return <MembersPage />;
+        return <MembersPage adminRole={adminRole} />;
+      case 'members-added-data':
+        return <AddedDataPage adminRole={adminRole} />;
+      case 'payments':
+        // Render Payments page
+        return <Payments />;
       default:
         return <div>Page not found</div>;
     }
