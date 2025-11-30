@@ -15,6 +15,8 @@ export const useMemberRegistrationHandlers = () => {
     phone: "",
     zipCode: "", // Add zipCode to formData
     status: "new", // Always include status: 'new' in formData
+    beneficiaryFullName: "",
+    beneficiaryPhone: "",
   });
 
   const [errors, setErrors] = useState({
@@ -29,6 +31,8 @@ export const useMemberRegistrationHandlers = () => {
     apartment: "", // Added apartment field
     phone: "",
     zipCode: "", // Add zipCode to errors
+    beneficiaryFullName: "",
+    beneficiaryPhone: "",
   });
 
   const handleChange = (
@@ -139,6 +143,17 @@ export const useMemberRegistrationHandlers = () => {
     // Validate Phone
     if (!formData.phone.trim() || formData.phone.replace(/\D/g, "").length < 10) {
       newErrors.phone = "Valid phone number is required";
+      isValid = false;
+    }
+
+    // Validate Beneficiary Full Name
+    if (!formData.beneficiaryFullName.trim()) {
+      newErrors.beneficiaryFullName = "Beneficiary full name is required";
+      isValid = false;
+    }
+    // Validate Beneficiary Phone
+    if (!formData.beneficiaryPhone.trim() || formData.beneficiaryPhone.replace(/\D/g, "").length < 10) {
+      newErrors.beneficiaryPhone = "Valid beneficiary phone number is required";
       isValid = false;
     }
 

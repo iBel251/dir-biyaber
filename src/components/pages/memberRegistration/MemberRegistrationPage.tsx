@@ -299,6 +299,51 @@ const MemberRegistrationPage: React.FC = () => {
               )}
             </div>
 
+            {/* Beneficiary Fields */}
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  htmlFor="beneficiaryFullName"
+                  className="block text-sm font-medium text-gray-700 mb-1 text-left"
+                >
+                  Beneficiary(ወራሽ) Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="beneficiaryFullName"
+                  name="beneficiaryFullName"
+                  value={formData.beneficiaryFullName}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${errors.beneficiaryFullName ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm`}
+                  placeholder="Enter beneficiary's full name"
+                />
+                {errors.beneficiaryFullName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.beneficiaryFullName}</p>
+                )}
+              </div>
+              <div>
+                <label
+                  htmlFor="beneficiaryPhone"
+                  className="block text-sm font-medium text-gray-700 mb-1 text-left"
+                >
+                  Beneficiary(ወራሽ) Phone <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  id="beneficiaryPhone"
+                  name="beneficiaryPhone"
+                  value={formData.beneficiaryPhone}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${errors.beneficiaryPhone ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm`}
+                  placeholder="(123) 456-7890"
+                  maxLength={14}
+                />
+                {errors.beneficiaryPhone && (
+                  <p className="mt-1 text-sm text-red-600">{errors.beneficiaryPhone}</p>
+                )}
+              </div>
+            </div>
+
             {/* Submit Button */}
             <div className="flex justify-center">
               <button

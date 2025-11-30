@@ -1,127 +1,126 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
+import { addMemberToMembersListOld } from './tempFunctions';
 
 const Temp = () => {
-  const [csvData, setCsvData] = useState<string>('');
-  const [parsedRows, setParsedRows] = useState<string[][]>([]);
-  const [duplicates, setDuplicates] = useState<string[][]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [successCount, setSuccessCount] = useState(0);
+  const [failCount, setFailCount] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [errors, setErrors] = useState<string[]>([]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploading(true);
+    setSuccessCount(0);
+    setFailCount(0);
+    setErrors([]);
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const data = new Uint8Array(event.target?.result as ArrayBuffer);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const rows: string[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      setParsedRows(rows);
-      // Find duplicates by id (id is in the 4th column, index 3)
-      const idCount: Record<string, number> = {};
-      const idToRows: Record<string, string[][]> = {};
-      rows.slice(1).forEach(row => {
-        const id = row[3]?.toString().trim();
-        if (id) {
-          idCount[id] = (idCount[id] || 0) + 1;
-          if (!idToRows[id]) idToRows[id] = [];
-          idToRows[id].push(row);
+    reader.onload = async (event) => {
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        if (!rows || rows.length < 2) {
+          setErrors(['No data found in file.']);
+          setUploading(false);
+          return;
         }
-      });
-      // Collect all rows for ids that appear more than once
-      const dups: string[][] = [];
-      Object.keys(idToRows).forEach(id => {
-        if (idCount[id] > 1) {
-          dups.push(...idToRows[id]);
+        // Expect headers: id, Name (En), Name (Am), phone, status
+        const header = rows[0].map((h: any) => h?.toString().trim().toLowerCase());
+        const idx = {
+          id: header.indexOf('id'),
+          fullName: header.indexOf('name (en)'),
+          fullNameAm: header.indexOf('name (am)'),
+          phone: header.indexOf('phone'),
+          status: header.indexOf('status'),
+        };
+        const missing = Object.entries(idx).filter(([k, v]) => v === -1).map(([k]) => k);
+        if (missing.length > 0) {
+          setErrors([`Missing columns: ${missing.join(', ')}`]);
+          setUploading(false);
+          return;
         }
-      });
-      setDuplicates([
-        ['ID', 'Name (En)', 'Name (Am)', 'Phone'],
-        ...dups.map(row => [row[3] || '', row[0] || '', row[1] || '', row[2] || '']) // id(4th), nameEn(1st), nameAm(2nd), phone(3rd)
-      ]);
+        const now = new Date();
+        let success = 0;
+        let fail = 0;
+        let errs: string[] = [];
+        setTotal(rows.length - 1);
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          const id = row[idx.id]?.toString().trim();
+          if (!id) {
+            fail++;
+            errs.push(`Row ${i + 1}: Missing id.`);
+            continue;
+          }
+          const data = {
+            id,
+            fullName: row[idx.fullName]?.toString().trim() || '',
+            fullNameAm: row[idx.fullNameAm]?.toString().trim() || '',
+            phone: row[idx.phone]?.toString().trim() || '',
+            status: row[idx.status]?.toString().trim() || '',
+            address: '',
+            email: '',
+            newId: '',
+            createdAt: now.toISOString(),
+          };
+          try {
+            const ok = await addMemberToMembersListOld(id, data);
+            if (ok) success++;
+            else {
+              fail++;
+              errs.push(`Row ${i + 1}: Firestore error.`);
+            }
+          } catch (err) {
+            fail++;
+            errs.push(`Row ${i + 1}: ${err}`);
+          }
+          setSuccessCount(success);
+          setFailCount(fail);
+        }
+        setErrors(errs);
+      } catch (err: any) {
+        setErrors([err.message || 'Unknown error']);
+      }
+      setUploading(false);
     };
     reader.readAsArrayBuffer(file);
   };
 
-  // Helper to format phone as xxx-xxx-xxxx
-  function formatPhone(phone: any): string {
-    if (typeof phone !== 'string') phone = phone ? String(phone) : '';
-    const digits = phone.replace(/\D/g, '');
-    if (digits.length === 10) {
-      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
-    }
-    return phone;
-  }
-
-  // Helper to clean nameEn
-  function cleanNameEn(name: string): string {
-    // Remove leading/trailing spaces, double spaces, and anything after ' -'
-    let cleaned = name.trim();
-    cleaned = cleaned.replace(/\s{2,}/g, ' '); // double spaces to single
-    cleaned = cleaned.replace(/\s*-.*$/, ''); // remove ' -...' and after
-    return cleaned;
-  }
-
-  // Remove a row by index
-  const handleDelete = (rowIdx: number) => {
-    setDuplicates(prev => {
-      // Remove the row at rowIdx+1 (since prev[0] is header)
-      return prev.filter((_, idx) => idx !== rowIdx + 1);
-    });
-  };
-
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">CSV Duplicate ID Finder</h1>
-      <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" onChange={handleFileChange} className="mb-4" />
-      {duplicates.length > 1 && (
-        <div>
-          <button
-            className="mb-4 bg-green-600 hover:bg-green-800 text-white px-4 py-2 rounded text-sm font-semibold"
-            onClick={() => {
-              const ws = XLSX.utils.aoa_to_sheet(duplicates);
-              const wb = XLSX.utils.book_new();
-              XLSX.utils.book_append_sheet(wb, ws, 'Duplicates');
-              XLSX.writeFile(wb, `filtered_duplicates_${new Date().toISOString().slice(0,10)}.xlsx`);
-            }}
-          >
-            Export as Excel
-          </button>
-          <div className="mb-2 text-red-600 font-semibold">Found {duplicates.length - 1} rows with duplicate IDs</div>
-          <table className="table-auto w-full mt-2 border-collapse border border-gray-300">
-            <thead>
-              <tr>
-                <th className="border border-gray-300 px-2 py-1">ID</th>
-                <th className="border border-gray-300 px-2 py-1">Name (En)</th>
-                <th className="border border-gray-300 px-2 py-1">Name (Am)</th>
-                <th className="border border-gray-300 px-2 py-1">Phone</th>
-                <th className="border border-gray-300 px-2 py-1">Delete</th>
-              </tr>
-            </thead>
-            <tbody>
-              {duplicates.slice(1).map((row, rowIdx) => (
-                <tr
-                  key={rowIdx}
-                  className="hover:bg-yellow-100 transition-colors duration-150"
-                >
-                  <td className="border border-gray-300 px-2 py-1">{row[0]}</td>
-                  <td className="border border-gray-300 px-2 py-1">{cleanNameEn(row[1])}</td>
-                  <td className="border border-gray-300 px-2 py-1">{row[2]}</td>
-                  <td className="border border-gray-300 px-2 py-1">{formatPhone(row[3])}</td>
-                  <td className="border border-gray-300 px-2 py-1 text-center">
-                    <button
-                      className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
-                      onClick={() => handleDelete(rowIdx)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <h1 className="text-xl font-bold mb-4">Bulk Member Excel Upload</h1>
+      <input
+        type="file"
+        accept=".xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+        onChange={handleFileChange}
+        disabled={uploading}
+        className="mb-4"
+      />
+      {uploading && (
+        <div className="mb-2 text-blue-600 font-semibold">Uploading... {successCount + failCount}/{total}</div>
+      )}
+      {!uploading && (successCount > 0 || failCount > 0) && (
+        <div className="mb-2">
+          <div className="text-green-700">Success: {successCount}</div>
+          <div className="text-red-700">Failed: {failCount}</div>
         </div>
       )}
+      {errors.length > 0 && (
+        <div className="mb-2 text-red-600">
+          {errors.map((e, i) => (
+            <div key={i}>{e}</div>
+          ))}
+        </div>
+      )}
+      <div className="text-sm text-gray-600 mt-4">
+        <div>Excel headers required: <b>id, fullName, fullNameAm, phone, status</b></div>
+        <div>Fields <b>address, email, newId</b> will be added as empty, <b>createdAt</b> will be set to now.</div>
+      </div>
     </div>
   );
 };

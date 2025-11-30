@@ -86,6 +86,8 @@ const MemberDetailPage: React.FC<MemberDetailPageProps> = ({ id, onBack }) => {
         <div className="mb-2"><strong>State:</strong> {member.state || '-'}</div>
         <div className="mb-2"><strong>Zip Code:</strong> {member.zipCode || '-'}</div>
         <div className="mb-2"><strong>Address:</strong> {member.address || '-'}</div>
+        <div className="mb-2"><strong>Beneficiary Name:</strong> {member.beneficiaryFullName || '-'}</div>
+        <div className="mb-2"><strong>Beneficiary Phone:</strong> {member.beneficiaryPhone || '-'}</div>
         <div className="mb-2"><strong>Created At:</strong> {member.createdAt ? new Date(member.createdAt).toLocaleString() : '-'}</div>
         {/* Render any other fields if needed */}
       </div>

@@ -3,6 +3,7 @@ import { fetchAllMembersListOld } from '../../../../firebase/firebaseMembersServ
 import useOldMembersStore from '../../../../store/oldMembersStore';
 import MemberDetailsModal from './MemberDetailsModal';
 import AddMemberModal from './AddMemberModal';
+import ExportHandler from './ExportHandler';
 import { GridLoader } from 'react-spinners';
 
 const PAGE_SIZE = 20;
@@ -22,6 +23,7 @@ const OldMembers: React.FC<OldMembersProps> = ({ adminRole }) => {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [sortField, setSortField] = useState<'name' | 'id'>('name');
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const filteredMembers = useMemo(() => {
     if (!searchQuery.trim()) return members; // Return full data if search query is empty
@@ -34,20 +36,10 @@ const OldMembers: React.FC<OldMembersProps> = ({ adminRole }) => {
     );
   }, [members, searchQuery]);
 
-  // Remove status filter from filteredAndSortedMembers, since filtering is now handled by the store
+  // Remove duplicate filtering logic and use filteredMembers for the filtered list
   const filteredAndSortedMembers = useMemo(() => {
-    // Filter
-    let filtered = members;
-    if (searchQuery.trim()) {
-      const lowerQuery = searchQuery.toLowerCase();
-      filtered = members.filter((member) =>
-        (member.id && member.id.toLowerCase().includes(lowerQuery)) ||
-        (member.fullName && member.fullName.toLowerCase().includes(lowerQuery)) ||
-        (member.fullNameAm && member.fullNameAm.toLowerCase().includes(lowerQuery)) ||
-        (member.phone && member.phone.toLowerCase().includes(lowerQuery))
-      );
-    }
     // Sort
+    let filtered = filteredMembers;
     if (sortField === 'name') {
       return [...filtered].sort((a, b) => {
         const nameA = a.fullName || '';
@@ -62,7 +54,7 @@ const OldMembers: React.FC<OldMembersProps> = ({ adminRole }) => {
     }
     // ID sort: store state already sorted
     return filtered;
-  }, [members, searchQuery, sortOrder, sortField]);
+  }, [filteredMembers, sortOrder, sortField]);
 
   const paginatedFilteredAndSortedMembers = useMemo(() => {
     const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -93,6 +85,7 @@ const OldMembers: React.FC<OldMembersProps> = ({ adminRole }) => {
     try {
       const allMembers = await fetchAllMembersListOld(PAGE_SIZE);
       const formattedMembers = allMembers.map((member) => ({
+        ...member, // Preserve all fields, including payment data
         id: member.id,
         fullName: member.fullName || '',
         fullNameAm: member.fullNameAm || '',
@@ -107,7 +100,6 @@ const OldMembers: React.FC<OldMembersProps> = ({ adminRole }) => {
         newId: member.newId || '',
         dateOfBirth: member.dateOfBirth || '',
         additionalFields: member.additionalFields || {},
-        // Add any other fields you want to preserve
       }));
       setMembers(formattedMembers); // Store fetched data in Zustand store
       setCurrentPage(1); // Reset to page 1 after data is loaded
@@ -124,6 +116,7 @@ const OldMembers: React.FC<OldMembersProps> = ({ adminRole }) => {
     try {
       const refreshedMembers = await fetchAllMembersListOld(PAGE_SIZE);
       const formattedMembers = refreshedMembers.map((member) => ({
+        ...member, // Preserve all fields, including payment data
         id: member.id,
         fullName: member.fullName || '',
         fullNameAm: member.fullNameAm || '',
@@ -254,6 +247,13 @@ const OldMembers: React.FC<OldMembersProps> = ({ adminRole }) => {
             >
               Add Member
             </button>
+            <button
+              className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 ml-2"
+              onClick={() => setShowExportModal(true)}
+              disabled={members.length === 0}
+            >
+              Export Data
+            </button>
           </div>
           <div className="mb-4">
             <input
@@ -353,6 +353,21 @@ const OldMembers: React.FC<OldMembersProps> = ({ adminRole }) => {
       )}
       {showAddModal && (
         <AddMemberModal onClose={() => setShowAddModal(false)} />
+      )}
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded shadow-lg p-6 min-w-[320px] relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl"
+              onClick={() => setShowExportModal(false)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h2 className="text-lg font-semibold mb-4">Export Members Data</h2>
+            <ExportHandler />
+          </div>
+        </div>
       )}
     </div>
   );

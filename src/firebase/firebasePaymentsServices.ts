@@ -57,3 +57,54 @@ export async function insertMemberPaymentToPaymentDoc(paymentId: string, memberI
   await setDoc(docRef, updateData, { merge: true });
   return true;
 }
+
+/**
+ * Adds or updates multiple payment records for a member in the 'membersListOld' collection.
+ * @param memberId - The ID of the member document to update.
+ * @param paymentsArray - Array of objects: [{ paymentNumber: string, data: object }]
+ */
+export async function addOrUpdateMemberPayments(memberId: string, paymentsArray: Array<{ paymentNumber: string, data: Record<string, any> }>) {
+  const memberRef = doc(getFirestore(), 'membersListOld', memberId);
+  const memberSnap = await getDoc(memberRef);
+  if (!memberSnap.exists()) {
+    throw new Error(`Member with ID ${memberId} does not exist.`);
+  }
+  const memberData = memberSnap.data() || {};
+  const currentPayments = Array.isArray(memberData.payments) ? [...memberData.payments] : [];
+
+  // Convert currentPayments to a map for easy update
+  const paymentsMap: Record<string, any> = {};
+  currentPayments.forEach((p: any) => {
+    if (p && p.paymentNumber) paymentsMap[p.paymentNumber] = p.data;
+  });
+
+  // Add/update each payment
+  paymentsArray.forEach(({ paymentNumber, data }) => {
+    paymentsMap[paymentNumber] = data;
+  });
+
+  // Convert back to array format
+  const updatedPayments = Object.entries(paymentsMap).map(([paymentNumber, data]) => ({ paymentNumber, data }));
+
+  await setDoc(memberRef, { payments: updatedPayments }, { merge: true });
+  return true;
+}
+
+/**
+ * Removes a payment entry from a member's payments array in the 'membersListOld' collection by paymentNumber.
+ * @param memberId - The ID of the member document.
+ * @param paymentNumber - The payment number to remove.
+ * @returns {Promise<boolean>} True if removed, false otherwise.
+ */
+export async function removeMemberPaymentByNumber(memberId: string, paymentNumber: string): Promise<boolean> {
+  const memberRef = doc(getFirestore(), 'membersListOld', memberId);
+  const memberSnap = await getDoc(memberRef);
+  if (!memberSnap.exists()) {
+    throw new Error(`Member with ID ${memberId} does not exist.`);
+  }
+  const memberData = memberSnap.data() || {};
+  const currentPayments = Array.isArray(memberData.payments) ? [...memberData.payments] : [];
+  const filteredPayments = currentPayments.filter((p: any) => String(p.paymentNumber) !== String(paymentNumber));
+  await setDoc(memberRef, { payments: filteredPayments }, { merge: true });
+  return true;
+}
