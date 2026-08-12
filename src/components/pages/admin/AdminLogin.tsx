@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { login, getCurrentUser, resetPassword } from '../../../firebase/authService'; // Import the login function, getCurrentUser, and resetPassword
+import { onAuthStateChanged, getAuth } from 'firebase/auth';
+import { login, resetPassword } from '../../../firebase/authService'; // Import the login function and resetPassword
 
 const App: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,11 +16,16 @@ const App: React.FC = () => {
   const [resetMessage, setResetMessage] = useState('');
   const navigate = useNavigate(); // Initialize useNavigate
 
+  // Wait for Firebase to finish restoring any persisted session before deciding whether
+  // to redirect. Reading auth.currentUser synchronously on mount returns null even for a
+  // signed-in admin, which left them staring at the login form.
   useEffect(() => {
-    const user = getCurrentUser(); // Check if the user is already logged in
-    if (user) {
-      navigate('/portal'); // Redirect to /portal if logged in
-    }
+    const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
+      if (user) {
+        navigate('/portal'); // Redirect to /portal if logged in
+      }
+    });
+    return () => unsubscribe();
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -1,0 +1,108 @@
+rules_version = '2';
+
+// Role-based Firestore rules. This is the live ruleset — firebase.json points here, so
+// `firebase deploy --only firestore:rules` publishes this file.
+//
+// Access derives from adminRoles/{lowercased email}, populated on 2026-08-10.
+//
+// If that collection is ever emptied or restored into a fresh Firestore instance, every
+// admin loses portal access — recreate the documents in the console, or call
+// migrateAdminRoles() in src/firebase/firebaseAdminServices.ts, BEFORE relying on these
+// rules again.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- role helpers ------------------------------------------------------
+    // Roles live at adminRoles/{lowercased email}. Emails are lowercased on both sides so
+    // capitalisation can never cost an admin their access.
+    function roleDoc() {
+      return get(/databases/$(database)/documents/adminRoles/$(request.auth.token.email.lower()));
+    }
+
+    function signedIn() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    function hasRoleDoc() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/adminRoles/$(request.auth.token.email.lower()));
+    }
+
+    function role() {
+      return hasRoleDoc() ? roleDoc().data.role : null;
+    }
+
+    // 'blocked' is an assignable role in the portal, so admin status is an explicit
+    // allowlist rather than "anything that is not blocked".
+    function isAdmin() {
+      return role() == 'superAdmin' || role() == 'regularAdmin';
+    }
+
+    function isSuperAdmin() {
+      return role() == 'superAdmin';
+    }
+
+    // ---- public site content: world-readable, admin-writable ---------------
+    // These back the public pages, so anonymous reads must keep working.
+    // Note there is no top-level 'forms' collection: the public Forms page reads the
+    // posts/forms document, and blog content reads posts/sections.
+    match /obituaries/{docId}    { allow read: if true; allow write: if isAdmin(); }
+    match /board_members/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /posts/{docId}         { allow read: if true; allow write: if isAdmin(); }
+
+    // ---- public member registration ----------------------------------------
+    // The registration page is unauthenticated, so anyone may submit an application.
+    // Reading, amending and deleting submissions stays with admins. The field checks
+    // keep this from being a general-purpose public write endpoint.
+    // Deliberately NOT an exact field allowlist: saveMemberData() spreads the whole
+    // registration form state, so enumerating fields here breaks the public form the
+    // moment anyone adds an input. Instead: require the fields that must be present,
+    // bound their length, and cap the document's overall shape so this cannot be used
+    // as general-purpose public storage.
+    match /membersAddedData/{docId} {
+      allow create: if request.resource.data.keys().size() <= 30
+                    && request.resource.data.firstName is string
+                    && request.resource.data.firstName.size() > 0
+                    && request.resource.data.firstName.size() <= 100
+                    && request.resource.data.lastName is string
+                    && request.resource.data.lastName.size() > 0
+                    && request.resource.data.lastName.size() <= 100
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() <= 200
+                    && request.resource.data.phone is string
+                    && request.resource.data.phone.size() <= 40;
+      // saveMemberData() writes the document, then merges its own id back in.
+      allow update: if isAdmin()
+                    || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['docId']));
+      allow read, delete: if isAdmin();
+    }
+
+    // ---- member and payment records: admin only ----------------------------
+    // The membership roster (names, dates of birth, addresses, phone numbers) and the
+    // payment history. Never publicly readable.
+    match /members/{docId}        { allow read, write: if isAdmin(); }
+    match /membersListOld/{docId} { allow read, write: if isAdmin(); }
+    match /payments/{docId}       { allow read, write: if isAdmin(); }
+
+    // ---- role assignments ---------------------------------------------------
+    // A signed-in user may read role documents so the portal can resolve its own role;
+    // only a superAdmin may hand out or revoke roles.
+    match /adminRoles/{docId} {
+      allow read: if signedIn();
+      allow write: if isSuperAdmin();
+    }
+
+    // Legacy roles/user_status array, kept in sync by the dual-write in
+    // firebaseAdminServices.ts. Delete this block once the dual-write is removed.
+    match /roles/{docId} {
+      allow read: if signedIn();
+      allow write: if isSuperAdmin();
+    }
+
+    // Anything not matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

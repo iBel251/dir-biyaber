@@ -1,5 +1,6 @@
-import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
-import { app } from "./firebaseConfig"; // Ensure this file exports your Firebase configuration
+import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword } from "firebase/auth";
+import { initializeApp, deleteApp } from "firebase/app";
+import { app, firebaseConfig } from "./firebaseConfig"; // Ensure this file exports your Firebase configuration
 
 const auth = getAuth(app);
 
@@ -41,24 +42,25 @@ export async function resetPassword(email: string): Promise<void> {
     }
 }
 
-// Function to create an admin user
+// Function to create an admin user.
+// Runs on a temporary secondary Firebase app so that createUserWithEmailAndPassword
+// signs the new user into *that* app instead of replacing the current admin's session.
 export async function createAdminUser(email: string, password: string) {
+    const secondaryApp = initializeApp(firebaseConfig, `admin-creation-${Date.now()}`);
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        return userCredential.user;
+        const secondaryAuth = getAuth(secondaryApp);
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const { uid } = userCredential.user;
+        await signOut(secondaryAuth);
+        return { uid, email };
     } catch (error) {
         console.error("Error creating admin user:", error);
         throw error;
+    } finally {
+        await deleteApp(secondaryApp);
     }
 }
 
-// Function to delete an admin user
-export async function deleteAdminUser(uid: string): Promise<void> {
-    try {
-        await deleteUser(auth.currentUser!); // The user object must be the one you intend to delete, if logged in
-        console.log("Admin user deleted successfully.");
-    } catch (error) {
-        console.error("Error deleting admin user:", error);
-        throw error;
-    }
-}
+// NOTE: deleting another user's auth account requires the Admin SDK and cannot be done
+// from the client. Use deleteUserByUID() in firebaseAdminServices.ts, which invokes the
+// 'deleteUser' callable Cloud Function.

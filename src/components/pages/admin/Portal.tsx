@@ -17,6 +17,7 @@ import FormsPage from './FormsPage';
 import MembersPage from './members/MembersPage';
 import AddedDataPage from './addedDataPage/AddedDataPage'
 import Payments from './payments/Payments';
+import Temp from './temp/Temp';
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -73,7 +74,13 @@ const App: React.FC = () => {
         // Render BoardMember page directly
         return <BoardMemberModal adminRole={adminRole} />; // Pass adminRole
       case 'admin-roles':
-        return <AdminRoleManagement />;
+        return adminRole === 'superAdmin'
+          ? <AdminRoleManagement />
+          : <div className="p-6">You do not have access to this page.</div>;
+      case 'bulk-upload':
+        return adminRole === 'superAdmin'
+          ? <Temp />
+          : <div className="p-6">You do not have access to this page.</div>;
       case 'forms':
         return <FormsPage />;
       case 'members':

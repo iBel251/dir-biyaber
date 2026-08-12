@@ -88,7 +88,18 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarCollapsed, setSidebarCollapsed
           </li>
           {adminRole === 'superAdmin' && ( // Show only for superAdmin
             <li>
-              <button 
+              <button
+                onClick={() => setActiveItem('bulk-upload')}
+                className={`flex items-center w-full px-4 py-3 ${activeItem === 'bulk-upload' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
+              >
+                <i className="fas fa-file-import w-5"></i>
+                <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Bulk Member Upload</span>
+              </button>
+            </li>
+          )}
+          {adminRole === 'superAdmin' && ( // Show only for superAdmin
+            <li>
+              <button
                 onClick={() => setActiveItem('admin-roles')}
                 className={`flex items-center w-full px-4 py-3 ${activeItem === 'admin-roles' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
               >

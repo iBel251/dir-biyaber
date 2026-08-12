@@ -1,5 +1,25 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+
+// This store deliberately does NOT persist.
+//
+// It previously used zustand/persist into localStorage, holding TWO full copies of every
+// member document (members + membersBackup). Once members started carrying their payment
+// history, the payload passed localStorage's ~5MB quota and setItem threw
+// QuotaExceededError from inside React's commit phase — which surfaced as an uncaught
+// runtime error and left setMembers half-applied, so refreshing the member list silently
+// stopped working.
+//
+// Member data is authoritative in Firestore and only grows, so it is fetched on mount
+// instead of cached. Anything reading this store must load its own data (see the mount
+// effects in OldMembers and ActiveList).
+const LEGACY_PERSIST_KEY = 'old-members-store';
+try {
+  // Reclaim the megabytes an older build left behind, otherwise the quota stays consumed
+  // for every other store in the app.
+  localStorage.removeItem(LEGACY_PERSIST_KEY);
+} catch {
+  /* storage unavailable (private mode); nothing to clean up */
+}
 
 interface OldMembersState {
   members: any[];
@@ -13,8 +33,7 @@ interface OldMembersState {
   changeMemberStatus: (id: string, status: string) => void;
 }
 
-const useOldMembersStore = create(
-  persist<OldMembersState>(
+const useOldMembersStore = create<OldMembersState>(
     (set) => ({
       members: [],
       membersBackup: [],
@@ -120,23 +139,7 @@ const useOldMembersStore = create(
           membersBackup: update(state.membersBackup),
         };
       }),
-    }),
-    {
-      name: 'old-members-store', // Name of the storage key
-      storage: {
-        getItem: (name) => {
-          const item = localStorage.getItem(name);
-          return item ? JSON.parse(item) : null;
-        },
-        setItem: (name, value) => {
-          localStorage.setItem(name, JSON.stringify(value));
-        },
-        removeItem: (name) => {
-          localStorage.removeItem(name);
-        },
-      },
-    }
-  )
+    })
 );
 
 export default useOldMembersStore;

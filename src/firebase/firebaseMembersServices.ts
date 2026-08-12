@@ -110,11 +110,18 @@ export async function fetchAllMembersListOld(pageSize: number): Promise<any[]> {
 export async function saveMemberData(memberData: {
   firstName: string;
   lastName: string;
-  membershipId: string; // Retain only membershipId
+  membershipId: string;
   email: string;
   gender: string;
   address: string;
+  city: string;
+  state: string;
+  apartment: string;
   phone: string;
+  zipCode: string;
+  status: string;
+  beneficiaryFullName: string;
+  beneficiaryPhone: string;
 }) {
   try {
     const membersCollectionRef = collection(db, "membersAddedData"); // Reference to the collection

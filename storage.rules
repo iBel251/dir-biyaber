@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// Tightened Storage rules. Deploy alongside the Firestore stopgap.
+//
+// Public pages display these files via getDownloadURL() tokens, which bypass Storage
+// rules entirely — so removing public read here does NOT break the site.
+//
+// To deploy: point firebase.json at this file, or paste into
+// Console -> Storage -> Rules and publish there.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Board member photos, obituary photos, post images.
+    match /members/{fileName}    { allow read, write: if signedIn(); }
+    match /obituaries/{fileName} { allow read, write: if signedIn(); }
+    match /posts/{fileName}      { allow read, write: if signedIn(); }
+
+    // Downloadable forms (PDFs and similar) shown on the public Forms page.
+    match /forms/{fileName} { allow read, write: if signedIn(); }
+
+    // Receipt photos, one folder per member so two uploads can never collide on name.
+    // Images only, capped at 10MB — these are phone photos of paper receipts, and this is
+    // the one Storage path a bulk import can write to unattended.
+    match /receipts/{memberId}/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn()
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if signedIn();
+    }
+
+    // Nothing writes anywhere else, so deny by default rather than leaving the
+    // whole bucket writable to any account.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

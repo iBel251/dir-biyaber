@@ -1,4 +1,4 @@
-import { getFirestore, collection, getDocs, addDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { getFirestore, collection, getDocs, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db } from "./firebaseConfig"; // Ensure this file exports your Firebase configuration
 import { v4 as uuidv4 } from "uuid";
@@ -209,62 +209,121 @@ export async function editPost(postId: string, updatedFields: { header: string; 
     }
 }
 
-// Function to set user role in the "roles" collection
-export async function setUserRole(email: string, role: string, name: string, uid?: string) {
-    const rolesDocRef = doc(db, 'roles', 'user_status');
-    const userObj = { email, role, name, uid };
-    const docSnap = await getDoc(rolesDocRef);
+/*
+ * Admin roles are stored twice, on purpose:
+ *
+ *  - legacy: a single roles/user_status document holding an array of user objects.
+ *  - current: one document per admin in the adminRoles collection, keyed by lowercased
+ *    email.
+ *
+ * Only the second shape can be read from Firestore security rules — the rules language
+ * cannot search an array of maps for a matching field. Every mutation below writes both
+ * shapes and every read prefers adminRoles but falls back to the array, so the portal
+ * behaves identically whether or not migrateAdminRoles() has been run yet.
+ *
+ * Once the adminRoles collection is populated and the rules are deployed, the legacy
+ * array and the dual-write can be dropped.
+ */
 
-    if (!docSnap.exists()) {
-        // Creates an array of user objects
-        await setDoc(rolesDocRef, { userRoles: [userObj] });
-    } else {
-        // Appends a new user object to the array
-        await updateDoc(rolesDocRef, {
-            userRoles: arrayUnion(userObj),
-        });
-    }
+const ADMIN_ROLES_COLLECTION = 'adminRoles';
+const LEGACY_ROLES_DOC = ['roles', 'user_status'] as const;
+
+// Document IDs and the email claim compared against them in rules are both lowercased,
+// so that a difference in capitalisation can never cost an admin their access.
+function adminRoleKey(email: string) {
+    return email.trim().toLowerCase();
 }
 
-// Function to fetch user roles from the "user_status" document
+function legacyRolesRef() {
+    return doc(db, LEGACY_ROLES_DOC[0], LEGACY_ROLES_DOC[1]);
+}
+
+async function readLegacyRoles(): Promise<any[]> {
+    const docSnap = await getDoc(legacyRolesRef());
+    if (!docSnap.exists()) return [];
+    return docSnap.data()?.userRoles || [];
+}
+
+async function writeLegacyRoles(userRoles: any[]) {
+    await setDoc(legacyRolesRef(), { userRoles }, { merge: true });
+}
+
+// Function to set user role in the "adminRoles" collection (and the legacy array)
+export async function setUserRole(email: string, role: string, name: string, uid?: string) {
+    const key = adminRoleKey(email);
+    const userObj = { email: key, role, name, uid: uid ?? null };
+
+    await setDoc(doc(db, ADMIN_ROLES_COLLECTION, key), userObj);
+
+    const legacy = await readLegacyRoles();
+    const withoutUser = legacy.filter((u: any) => adminRoleKey(u.email || '') !== key);
+    await writeLegacyRoles([...withoutUser, userObj]);
+}
+
+// Function to fetch every admin, preferring adminRoles and falling back to the legacy array
 export async function fetchUserRoles() {
-    const rolesDocRef = doc(db, 'roles', 'user_status');
-    const docSnap = await getDoc(rolesDocRef);
-    if (!docSnap.exists()) {
-        return [];
+    const snapshot = await getDocs(collection(db, ADMIN_ROLES_COLLECTION));
+    if (!snapshot.empty) {
+        return snapshot.docs.map((d) => ({ ...d.data(), email: d.id }));
     }
-    const data = docSnap.data();
-    return data.userRoles || [];
+    return readLegacyRoles();
 }
 
 // Function to update the role of an existing user
 export async function updateUserRole(email: string, newRole: string) {
-    const rolesDocRef = doc(db, 'roles', 'user_status');
-    const docSnap = await getDoc(rolesDocRef);
-    if (!docSnap.exists()) return;
+    const key = adminRoleKey(email);
 
-    const data = docSnap.data();
-    const updatedList = (data.userRoles || []).map((u: any) =>
-        u.email === email ? { ...u, role: newRole } : u
+    const adminRoleRef = doc(db, ADMIN_ROLES_COLLECTION, key);
+    if ((await getDoc(adminRoleRef)).exists()) {
+        await updateDoc(adminRoleRef, { role: newRole });
+    }
+
+    const legacy = await readLegacyRoles();
+    await writeLegacyRoles(
+        legacy.map((u: any) => (adminRoleKey(u.email || '') === key ? { ...u, role: newRole } : u))
     );
-
-    await updateDoc(rolesDocRef, {
-        userRoles: updatedList
-    });
 }
 
-// Function to remove a user role from the "roles" collection
+// Function to remove a user role from both stores
 export async function removeUserRole(email: string) {
-    const rolesDocRef = doc(db, 'roles', 'user_status');
-    const docSnap = await getDoc(rolesDocRef);
-    if (!docSnap.exists()) return;
+    const key = adminRoleKey(email);
 
-    const data = docSnap.data();
-    const updatedList = (data.userRoles || []).filter((u: any) => u.email !== email);
+    await deleteDoc(doc(db, ADMIN_ROLES_COLLECTION, key));
 
-    await updateDoc(rolesDocRef, {
-        userRoles: updatedList
-    });
+    const legacy = await readLegacyRoles();
+    await writeLegacyRoles(legacy.filter((u: any) => adminRoleKey(u.email || '') !== key));
+}
+
+/**
+ * Re-seeds the adminRoles collection from the legacy roles/user_status array.
+ *
+ * This was run once on 2026-08-10 to populate adminRoles, and the button that invoked it
+ * has since been removed from the portal. It is kept as a recovery path: adminRoles is
+ * what firestore.rules reads to authorise every admin, so if that collection is ever lost
+ * or restored empty, every admin is locked out of the portal and out of the console-free
+ * means of fixing it. Wire this to a temporary button, or recreate the handful of
+ * documents by hand in the Firebase console.
+ *
+ * Safe to run repeatedly; does not delete the legacy array.
+ *
+ * @returns the emails that were written.
+ */
+export async function migrateAdminRoles(): Promise<string[]> {
+    const legacy = await readLegacyRoles();
+    const migrated: string[] = [];
+
+    for (const user of legacy) {
+        if (!user?.email) continue;
+        const key = adminRoleKey(user.email);
+        await setDoc(
+            doc(db, ADMIN_ROLES_COLLECTION, key),
+            { email: key, role: user.role, name: user.name ?? '', uid: user.uid ?? null },
+            { merge: true }
+        );
+        migrated.push(key);
+    }
+
+    return migrated;
 }
 
 // Function to delete a user by UID using Firebase Functions
@@ -273,20 +332,18 @@ export async function deleteUserByUID(uid: string): Promise<void> {
     await deleteUser({ uid });
 }
 
-// Function to fetch a user's role by email from the "roles" collection
+// Function to fetch a user's role by email, preferring adminRoles over the legacy array
 export async function fetchUserRoleByEmail(email: string): Promise<string | null> {
+    const key = adminRoleKey(email);
     try {
-        const rolesDocRef = doc(db, 'roles', 'user_status');
-        const rolesDoc = await getDoc(rolesDocRef);
-
-        if (rolesDoc.exists()) {
-            const userRoles = rolesDoc.data()?.userRoles || [];
-            const userRole = userRoles.find((u: any) => u.email === email)?.role;
-            return userRole || null; // Return the role or null if not found
-        } else {
-            console.warn("Roles document does not exist.");
-            return null;
+        const adminRoleDoc = await getDoc(doc(db, ADMIN_ROLES_COLLECTION, key));
+        if (adminRoleDoc.exists()) {
+            return adminRoleDoc.data()?.role || null;
         }
+
+        // Not migrated yet — fall back to the legacy array so the portal keeps working.
+        const legacy = await readLegacyRoles();
+        return legacy.find((u: any) => adminRoleKey(u.email || '') === key)?.role || null;
     } catch (error) {
         console.error("Error fetching user role by email:", error);
         throw error;
