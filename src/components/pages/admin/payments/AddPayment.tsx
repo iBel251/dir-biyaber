@@ -36,6 +36,34 @@ const AddPayment: React.FC = () => {
   const [method, setMethod] = useState('');
   const [receiptNumber, setReceiptNumber] = useState('');
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState('');
+
+  // Storage rules reject anything over 10MB or non-image, but only after the whole file has
+  // gone over the wire and with an opaque Firebase error. Phone photos routinely exceed
+  // this, so the same limits are checked here where the message can be useful.
+  const MAX_RECEIPT_BYTES = 10 * 1024 * 1024;
+
+  const handleReceiptImageChange = (file: File | null) => {
+    if (!file) {
+      setReceiptImage(null);
+      setImageError('');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      setReceiptImage(null);
+      setImageError('Receipt photo must be an image file.');
+      return;
+    }
+    if (file.size > MAX_RECEIPT_BYTES) {
+      setReceiptImage(null);
+      setImageError(
+        `That photo is ${(file.size / 1024 / 1024).toFixed(1)}MB — the limit is 10MB. Please use a smaller image.`
+      );
+      return;
+    }
+    setImageError('');
+    setReceiptImage(file);
+  };
 
   const resetForm = () => {
     setTotalAmount('');
@@ -46,6 +74,7 @@ const AddPayment: React.FC = () => {
     setMethod('');
     setReceiptNumber('');
     setReceiptImage(null);
+    setImageError('');
     setConfirming(false);
     setResult(null);
     setInputId('');
@@ -362,9 +391,12 @@ const AddPayment: React.FC = () => {
                         type="file"
                         accept="image/*"
                         className="border px-3 py-2 rounded w-full text-sm bg-white"
-                        onChange={(e) => setReceiptImage(e.target.files?.[0] || null)}
+                        onChange={(e) => handleReceiptImageChange(e.target.files?.[0] || null)}
                         disabled={adding}
                       />
+                      {imageError && (
+                        <div className="mt-1 text-sm text-red-600">{imageError}</div>
+                      )}
                       {receiptImage && (
                         <div className="mt-2 flex items-center gap-3">
                           <img
@@ -375,7 +407,7 @@ const AddPayment: React.FC = () => {
                           <button
                             type="button"
                             className="text-red-600 text-sm underline"
-                            onClick={() => setReceiptImage(null)}
+                            onClick={() => handleReceiptImageChange(null)}
                             disabled={adding}
                           >
                             Remove

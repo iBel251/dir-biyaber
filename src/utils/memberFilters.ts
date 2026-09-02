@@ -109,24 +109,34 @@ export function filterAndRankMembers(
   return ranked.map((r) => r.member);
 }
 
-/** CSV of a filtered result, for chasing unpaid dues away from the screen. */
-export function membersToCsv(members: Record<string, any>[], numbers: string[]): string {
-  const escape = (v: any) => {
-    const s = String(v ?? '');
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
+/**
+ * The export table as rows, header first. CSV and Excel are the same data in two
+ * containers, so the shape is built once here and serialised by the callers.
+ */
+export function membersToRows(members: Record<string, any>[], numbers: string[]): any[][] {
   const header = ['ID', 'Full Name', 'Full Name (Am)', 'Phone', 'Email', 'Status'];
   if (numbers.length) header.push(...numbers.map((n) => `Payment ${n}`), 'Missing');
 
-  const lines = members.map((m) => {
+  const rows = members.map((m) => {
     const row: any[] = [m.id, m.fullName, m.fullNameAm, m.phone, m.email, m.status];
     if (numbers.length) {
       const paid = paidNumbersOf(m);
       numbers.forEach((n) => row.push(paid.has(n) ? 'paid' : ''));
       row.push(numbers.filter((n) => !paid.has(n)).join(' '));
     }
-    return row.map(escape).join(',');
+    return row;
   });
 
-  return [header.join(','), ...lines].join('\n');
+  return [header, ...rows];
+}
+
+/** CSV of a filtered result, for chasing unpaid dues away from the screen. */
+export function membersToCsv(members: Record<string, any>[], numbers: string[]): string {
+  const escape = (v: any) => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return membersToRows(members, numbers)
+    .map((row) => row.map(escape).join(','))
+    .join('\n');
 }

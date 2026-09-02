@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchMemberById, removeMemberPaymentByNumber } from '../../../../firebase/firebasePaymentsServices';
 import useOldMembersStore from '../../../../store/oldMembersStore';
+import { normalizeReceipts } from '../../../../utils/payments';
 
 interface PaymentDetailProps {
   id: string;
@@ -14,6 +15,9 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({ id, onClose }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  // Receipt photos are shown as small thumbnails so the existing layout is untouched;
+  // clicking one opens it full size over the modal.
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const setMembers = useOldMembersStore((state) => state.setMembers);
 
   useEffect(() => {
@@ -32,6 +36,16 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({ id, onClose }) => {
     };
     fetchData();
   }, [id]);
+
+  // Esc closes the enlarged photo first; the modal's own close button still handles the rest.
+  useEffect(() => {
+    if (!zoomedImage) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setZoomedImage(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [zoomedImage]);
 
   // Remove payment handler
   const handleRemovePayment = async (paymentNumber: string) => {
@@ -70,6 +84,11 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({ id, onClose }) => {
     paymentsArr = Object.entries(member.payments).map(([paymentNumber, data]) => ({ paymentNumber, data }));
   }
 
+  // Newest first: an operator checking a member almost always wants the most recent receipt.
+  const receipts = normalizeReceipts(member?.receipts)
+    .slice()
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40" style={{ overflowY: 'auto' }}>
       <div className="bg-white rounded-xl shadow-2xl p-8 min-w-[600px] max-w-4xl w-full relative overflow-x-auto max-h-[90vh] border-2 border-blue-400">
@@ -90,6 +109,50 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({ id, onClose }) => {
           <div><span className="font-bold text-blue-900">Phone:</span> <span className="text-gray-800">{member.phone}</span></div>
           <div><span className="font-bold text-blue-900">Email:</span> <span className="text-gray-800">{member.email}</span></div>
         </div>
+        {receipts.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-semibold text-xl mb-3 text-blue-700">Receipts</h3>
+            <ul className="space-y-2">
+              {receipts.map((r) => (
+                <li
+                  key={r.receiptId}
+                  className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg p-2"
+                >
+                  {r.imageUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => setZoomedImage(r.imageUrl as string)}
+                      className="shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
+                      title="Click to view full size"
+                    >
+                      <img
+                        src={r.imageUrl}
+                        alt={`Receipt ${r.receiptNumber}`}
+                        className="h-14 w-14 object-cover rounded border border-blue-300 hover:opacity-80 transition-opacity"
+                        loading="lazy"
+                      />
+                    </button>
+                  ) : (
+                    <div className="h-14 w-14 shrink-0 rounded border border-dashed border-blue-300 flex items-center justify-center text-[10px] text-gray-400 text-center leading-tight">
+                      No photo
+                    </div>
+                  )}
+                  <div className="text-sm text-gray-800 min-w-0">
+                    <div className="font-semibold text-blue-900">
+                      Receipt #{r.receiptNumber || '—'}
+                      <span className="ml-2 font-normal text-gray-600">{r.date}</span>
+                    </div>
+                    <div className="text-gray-600">
+                      ${r.totalAmount} · covers {r.coversFrom}–{r.coversTo}
+                      {r.method ? ` · ${r.method}` : ''}
+                      {r.place ? ` · ${r.place}` : ''}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div>
           <h3 className="font-semibold text-xl mb-3 text-blue-700">Payments</h3>
           {paymentsArr.length === 0 && <div className="text-gray-500">No payments found.</div>}
@@ -154,6 +217,28 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({ id, onClose }) => {
           </ul>
         </div>
       </div>
+
+      {/* Full-size receipt, above the detail modal. Click anywhere (or Esc) to dismiss. */}
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 z-[60] bg-black bg-opacity-80 flex items-center justify-center p-4"
+          onClick={() => setZoomedImage(null)}
+        >
+          <img
+            src={zoomedImage}
+            alt="Receipt full size"
+            className="max-h-[90vh] max-w-[90vw] object-contain rounded shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            className="absolute top-4 right-4 text-white bg-red-600 hover:bg-red-700 rounded-full w-12 h-12 text-3xl flex items-center justify-center"
+            onClick={() => setZoomedImage(null)}
+            aria-label="Close image"
+          >
+            &times;
+          </button>
+        </div>
+      )}
     </div>
   );
 };

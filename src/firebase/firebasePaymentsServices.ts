@@ -107,16 +107,57 @@ export async function addOrUpdateMemberPayments(memberId: string, paymentsArray:
  * @param paymentNumber - The payment number to remove.
  * @returns {Promise<boolean>} True if removed, false otherwise.
  */
+/**
+ * Removes one payment entry, and the receipt behind it once nothing references it any more.
+ *
+ * A receipt can cover a range of payment numbers, so removing a single number must NOT
+ * delete the receipt while its siblings are still paid — the receipt (and its photo) is
+ * only dropped when the entry removed was the last one carrying that receiptId.
+ *
+ * The image is deleted after the Firestore write commits, never before: an orphaned file
+ * in Storage is recoverable noise, whereas a receipt row pointing at a deleted image is a
+ * broken record in the UI.
+ */
 export async function removeMemberPaymentByNumber(memberId: string, paymentNumber: string): Promise<boolean> {
-  const memberRef = doc(db, 'membersListOld', memberId);
-  const memberSnap = await getDoc(memberRef);
-  if (!memberSnap.exists()) {
-    throw new Error(`Member with ID ${memberId} does not exist.`);
-  }
-  const memberData = memberSnap.data() || {};
-  const currentPayments = Array.isArray(memberData.payments) ? [...memberData.payments] : [];
-  const filteredPayments = currentPayments.filter((p: any) => String(p.paymentNumber) !== String(paymentNumber));
-  await setDoc(memberRef, { payments: filteredPayments }, { merge: true });
+  const memberRef = doc(db, MEMBERS_COLLECTION, memberId);
+  let imagePathToDelete: string | undefined;
+
+  await runTransaction(db, async (transaction) => {
+    const memberSnap = await transaction.get(memberRef);
+    if (!memberSnap.exists()) {
+      throw new Error(`Member with ID ${memberId} does not exist.`);
+    }
+    imagePathToDelete = undefined;
+
+    const memberData = memberSnap.data() || {};
+    const payments = normalizePayments(memberData.payments);
+    const receipts = normalizeReceipts(memberData.receipts);
+
+    const removed = payments.find((p) => String(p.paymentNumber) === String(paymentNumber));
+    if (!removed) return;
+
+    const remainingPayments = payments.filter((p) => String(p.paymentNumber) !== String(paymentNumber));
+    const receiptId = removed.data?.receiptId;
+
+    // Payments written before receipts existed have no receiptId; there is nothing to clean.
+    let remainingReceipts = receipts;
+    if (receiptId) {
+      const stillReferenced = remainingPayments.some((p) => p.data?.receiptId === receiptId);
+      if (!stillReferenced) {
+        const orphan = receipts.find((r) => r.receiptId === receiptId);
+        if (orphan?.imagePath) imagePathToDelete = orphan.imagePath;
+        remainingReceipts = receipts.filter((r) => r.receiptId !== receiptId);
+      }
+    }
+
+    transaction.set(
+      memberRef,
+      { payments: remainingPayments, receipts: remainingReceipts },
+      { merge: true }
+    );
+  });
+
+  if (imagePathToDelete) await deleteReceiptImage(imagePathToDelete);
   return true;
 }
 

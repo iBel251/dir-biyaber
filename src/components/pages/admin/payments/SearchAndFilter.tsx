@@ -5,13 +5,14 @@ import {
   PAYMENT_MODE_LABELS,
 } from '../../../../utils/memberFilters';
 import { parsePaymentNumberList } from '../../../../utils/payments';
+import ExportMenu, { ExportFormat } from './ExportMenu';
 
 interface SearchAndFilterProps {
   filters: MemberFilters;
   onChange: (filters: MemberFilters) => void;
   resultCount: number;
   totalCount: number;
-  onExport?: () => void;
+  onExport?: (format: ExportFormat) => void;
 }
 
 /**
@@ -74,16 +75,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           className="border px-3 py-2 rounded text-sm flex-1 min-w-[220px] disabled:bg-gray-100"
         />
 
-        {onExport && (
-          <button
-            type="button"
-            className="px-3 py-2 rounded bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold"
-            onClick={onExport}
-            disabled={!resultCount}
-          >
-            Export result
-          </button>
-        )}
+        {onExport && <ExportMenu onExport={onExport} disabled={!resultCount} />}
       </div>
 
       <div className="text-xs text-gray-600 flex flex-wrap gap-x-3">

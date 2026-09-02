@@ -8,11 +8,14 @@ import {
   EMPTY_FILTERS,
   filterAndRankMembers,
   membersToCsv,
+  membersToRows,
   paidNumbersOf,
 } from '../../../../utils/memberFilters';
 import { normalizePayments, parsePaymentNumberList } from '../../../../utils/payments';
+import ExportMenu, { ExportFormat } from './ExportMenu';
 
 const PAGE_SIZE = 20;
+const FULL_MODE_CHUNK = 100;
 
 const ActiveList: React.FC = () => {
   const members = useOldMembersStore((state) => state.members);
@@ -59,23 +62,76 @@ const ActiveList: React.FC = () => {
   // numbers, those are the only columns worth looking at — otherwise the answer to "who
   // hasn't paid 131-140" is buried among a hundred other columns.
   const [visiblePaymentNumber, setVisiblePaymentNumber] = useState<string>('');
+
+  // Full-sheet mode: every matching row in one continuous, Excel-like scroll surface
+  // instead of 20-row pages. Rows are appended in chunks as the viewer scrolls, so a
+  // few thousand members times a hundred payment columns doesn't lock up the browser.
+  const [fullMode, setFullMode] = useState(false);
+  const [visibleRowCount, setVisibleRowCount] = useState(FULL_MODE_CHUNK);
   const displayedColumns = useMemo(() => {
     if (visiblePaymentNumber) return [visiblePaymentNumber];
     if (filters.mode !== 'off' && filteredNumbers.length) return filteredNumbers;
     return allPaymentNumbers;
   }, [visiblePaymentNumber, filters.mode, filteredNumbers, allPaymentNumbers]);
 
-  const handleExport = () => {
-    const csv = membersToCsv(visibleMembers, filteredNumbers);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const displayedRows = fullMode ? visibleMembers.slice(0, visibleRowCount) : paginatedMembers;
+  const hasMoreRows = fullMode && visibleRowCount < visibleMembers.length;
+
+  // A changed filter (or a fresh entry into full mode) starts the sheet back at one chunk.
+  useEffect(() => {
+    setVisibleRowCount(FULL_MODE_CHUNK);
+  }, [filters, fullMode, activeMembers]);
+
+  // Append the next chunk once the viewer nears the bottom of the sheet.
+  const handleSheetScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (!hasMoreRows) return;
+    const el = e.currentTarget;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 400) {
+      setVisibleRowCount((c) => Math.min(c + FULL_MODE_CHUNK, visibleMembers.length));
+    }
+  };
+
+  // Esc leaves full mode, and the page behind it shouldn't scroll while the sheet is open.
+  useEffect(() => {
+    if (!fullMode) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFullMode(false);
+    };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [fullMode]);
+
+  // Same filtered rows either way; only the container differs. xlsx is loaded on demand so
+  // the sheet library stays out of the initial bundle.
+  const downloadBlob = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `members-filtered-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleExport = async (format: ExportFormat) => {
+    const stamp = new Date().toISOString().slice(0, 10);
+    if (format === 'csv') {
+      const csv = membersToCsv(visibleMembers, filteredNumbers);
+      downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `members-filtered-${stamp}.csv`);
+      return;
+    }
+    const XLSX = await import('xlsx');
+    const ws = XLSX.utils.aoa_to_sheet(membersToRows(visibleMembers, filteredNumbers));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Members');
+    const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    downloadBlob(new Blob([out], { type: 'application/octet-stream' }), `members-filtered-${stamp}.xlsx`);
   };
 
   // Re-fetch all members from Firestore and update Zustand store
@@ -146,6 +202,66 @@ const ActiveList: React.FC = () => {
     setClickedMember(member);
   };
 
+  // One table body shared by the paged view and the full-sheet overlay. In full mode the
+  // header row also sticks to the top of the scroll container, so column numbers stay
+  // readable however far down the sheet you are.
+  const renderTable = (sticky: boolean) => {
+    const headerTop = sticky ? 'sticky top-0 z-20' : '';
+    const headerZ = sticky ? 'sticky top-0 z-30' : 'z-10';
+    return (
+      <table className="min-w-full border border-gray-300 select-none">
+        <thead>
+          <tr>
+            <th className={`border px-3 py-2 bg-white sticky left-0 ${headerZ}`} style={{ left: 0, minWidth: 80 }}>ID</th>
+            <th className={`border px-3 py-2 bg-white sticky left-[80px] ${headerZ}`} style={{ left: 80, minWidth: 160 }}>Full Name</th>
+            <th className={`border px-3 py-2 bg-white sticky left-[240px] ${headerZ}`} style={{ left: 240, minWidth: 160 }}>Full Name (Am)</th>
+            {displayedColumns.map((num) => (
+              <th
+                key={num}
+                className={`border px-3 py-2 min-w-[60px] text-center ${headerTop} ${
+                  filteredNumbers.includes(num) && filters.mode !== 'off'
+                    ? 'bg-blue-100 text-blue-900'
+                    : 'bg-gray-50'
+                }`}
+              >
+                {num}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {displayedRows.map((m) => {
+            const paid = paidNumbersOf(m);
+            return (
+            <tr key={m.id}
+              onClick={e => handleRowClick(m, e)}
+              style={{ cursor: 'pointer' }}
+            >
+              <td className="border px-3 py-1 whitespace-nowrap max-w-[5ch] overflow-hidden text-ellipsis bg-white sticky left-0 z-10" style={{ left: 0, minWidth: 80 }}>{m.id}</td>
+              <td className="border px-3 py-1 bg-white sticky left-[80px] z-10" style={{ left: 80, minWidth: 160 }}>{m.fullName}</td>
+              <td className="border px-3 py-1 bg-white sticky left-[240px] z-10" style={{ left: 240, minWidth: 160 }}>{m.fullNameAm}</td>
+              {displayedColumns.map((num) => {
+                const isPaid = paid.has(num);
+                const highlighted = filters.mode !== 'off' && filteredNumbers.includes(num);
+                return (
+                  <td
+                    key={num}
+                    className={`border px-3 py-1 min-w-[60px] text-center ${
+                      highlighted ? (isPaid ? 'bg-green-50' : 'bg-red-50') : 'bg-gray-50'
+                    }`}
+                  >
+                    {isPaid ? <span title="Paid">✔️</span> : highlighted ? <span title="Not paid" className="text-red-400">—</span> : ''}
+                  </td>
+                );
+              })}
+            </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  };
+
   return (
     <div className="p-4">
       <h2 className="text-lg font-semibold mb-4">Active Members List</h2>
@@ -182,10 +298,22 @@ const ActiveList: React.FC = () => {
           )}
           {isRefetching ? 'Refreshing...' : 'Refresh List'}
         </button>
+        <button
+          className="px-3 py-1 rounded text-sm font-semibold bg-indigo-100 hover:bg-indigo-200 text-indigo-900"
+          onClick={() => setFullMode((v) => !v)}
+          title="Show every matching row in one scrollable sheet"
+        >
+          {fullMode ? 'Exit Full Sheet' : 'Full Sheet View'}
+        </button>
         {refetchError && <span className="text-red-500 text-xs ml-2">{refetchError}</span>}
-        <span className="text-sm text-gray-500">Page {page} of {totalPages || 1}</span>
+        <span className="text-sm text-gray-500">
+          {fullMode
+            ? `Showing ${displayedRows.length} of ${visibleMembers.length}`
+            : `Page ${page} of ${totalPages || 1}`}
+        </span>
       </div>
-      {visibleMembers.length > 0 ? (
+      {/* The paged view unmounts while the full sheet is open so only one heavy table exists at a time. */}
+      {fullMode ? null : visibleMembers.length > 0 ? (
         <>
           <div className="flex flex-col-reverse" style={{ maxWidth: '100%' }}>
             <div
@@ -194,56 +322,7 @@ const ActiveList: React.FC = () => {
               style={{ cursor: 'grab' }}
               onMouseDown={handleMouseDown}
             >
-              <table className="min-w-full border border-gray-300 select-none">
-                <thead>
-                  <tr>
-                    <th className="border px-3 py-2 bg-white sticky left-0 z-10" style={{ left: 0, minWidth: 80 }}>ID</th>
-                    <th className="border px-3 py-2 bg-white sticky left-[80px] z-10" style={{ left: 80, minWidth: 160 }}>Full Name</th>
-                    <th className="border px-3 py-2 bg-white sticky left-[240px] z-10" style={{ left: 240, minWidth: 160 }}>Full Name (Am)</th>
-                    {displayedColumns.map((num) => (
-                      <th
-                        key={num}
-                        className={`border px-3 py-2 min-w-[60px] text-center ${
-                          filteredNumbers.includes(num) && filters.mode !== 'off'
-                            ? 'bg-blue-100 text-blue-900'
-                            : 'bg-gray-50'
-                        }`}
-                      >
-                        {num}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedMembers.map((m) => {
-                    const paid = paidNumbersOf(m);
-                    return (
-                    <tr key={m.id}
-                      onClick={e => handleRowClick(m, e)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <td className="border px-3 py-1 whitespace-nowrap max-w-[5ch] overflow-hidden text-ellipsis bg-white sticky left-0 z-10" style={{ left: 0, minWidth: 80 }}>{m.id}</td>
-                      <td className="border px-3 py-1 bg-white sticky left-[80px] z-10" style={{ left: 80, minWidth: 160 }}>{m.fullName}</td>
-                      <td className="border px-3 py-1 bg-white sticky left-[240px] z-10" style={{ left: 240, minWidth: 160 }}>{m.fullNameAm}</td>
-                      {displayedColumns.map((num) => {
-                        const isPaid = paid.has(num);
-                        const highlighted = filters.mode !== 'off' && filteredNumbers.includes(num);
-                        return (
-                          <td
-                            key={num}
-                            className={`border px-3 py-1 min-w-[60px] text-center ${
-                              highlighted ? (isPaid ? 'bg-green-50' : 'bg-red-50') : 'bg-gray-50'
-                            }`}
-                          >
-                            {isPaid ? <span title="Paid">✔️</span> : highlighted ? <span title="Not paid" className="text-red-400">—</span> : ''}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              {renderTable(false)}
             </div>
           </div>
           {/* Pagination controls */}
@@ -270,6 +349,39 @@ const ActiveList: React.FC = () => {
             ? 'No active members data available.'
             : 'No members match this search or payment filter.'}
         </p>
+      )}
+
+      {fullMode && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col">
+          <div className="flex items-center gap-3 px-4 py-2 border-b bg-gray-50 shrink-0">
+            <h3 className="font-semibold">Full Sheet — Active Members</h3>
+            <span className="text-sm text-gray-500">
+              {displayedRows.length} of {visibleMembers.length} rows · {displayedColumns.length} payment columns
+            </span>
+            <div className="ml-auto">
+              <ExportMenu
+                onExport={handleExport}
+                disabled={!visibleMembers.length}
+                label="Export"
+                className="px-3 py-1 rounded text-sm font-semibold bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
+              />
+            </div>
+            <button
+              className="px-3 py-1 rounded text-sm font-semibold bg-red-100 hover:bg-red-200 text-red-900"
+              onClick={() => setFullMode(false)}
+            >
+              Close (Esc)
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto" onScroll={handleSheetScroll}>
+            {renderTable(true)}
+            {hasMoreRows && (
+              <div className="py-3 text-center text-sm text-gray-500">
+                Scroll for more rows…
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {clickedMember && (
