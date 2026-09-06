@@ -17,6 +17,7 @@ import FormsPage from './FormsPage';
 import MembersPage from './members/MembersPage';
 import AddedDataPage from './addedDataPage/AddedDataPage'
 import Payments from './payments/Payments';
+import ReceiptScansPage from './payments/scans/ReceiptScansPage';
 import Temp from './temp/Temp';
 
 const App: React.FC = () => {
@@ -90,6 +91,8 @@ const App: React.FC = () => {
       case 'payments':
         // Render Payments page
         return <Payments />;
+      case 'receipt-scans':
+        return <ReceiptScansPage />;
       default:
         return <div>Page not found</div>;
     }

@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { fetchMemberById, removeMemberPaymentByNumber } from '../../../../firebase/firebasePaymentsServices';
 import useOldMembersStore from '../../../../store/oldMembersStore';
-import { normalizeReceipts } from '../../../../utils/payments';
+import { MemberReceipt, normalizeReceipts } from '../../../../utils/payments';
+
+/**
+ * Receipts written before the scan-linking page have no fileType, so the extension in the
+ * storage path is the fallback. Everything else is treated as an image, which is what a
+ * receipt photo uploaded through AddPayment always is.
+ */
+const isPdfReceipt = (r: MemberReceipt): boolean =>
+  r.fileType === 'pdf' || /\.pdf($|\?)/i.test(String(r.imagePath || r.imageUrl || ''));
 
 interface PaymentDetailProps {
   id: string;
@@ -118,7 +126,20 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({ id, onClose }) => {
                   key={r.receiptId}
                   className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg p-2"
                 >
-                  {r.imageUrl ? (
+                  {r.imageUrl && isPdfReceipt(r) ? (
+                    // A scanned PDF cannot go in an <img>, and the zoom overlay is built
+                    // for images — open it in a tab, which is where a PDF is readable anyway.
+                    <a
+                      href={r.imageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-14 w-14 shrink-0 rounded border border-blue-300 bg-white flex flex-col items-center justify-center text-red-600 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      title="Open scanned receipt (PDF)"
+                    >
+                      <i className="fas fa-file-pdf text-xl"></i>
+                      <span className="text-[9px] text-gray-500 mt-0.5">Scan</span>
+                    </a>
+                  ) : r.imageUrl ? (
                     <button
                       type="button"
                       onClick={() => setZoomedImage(r.imageUrl as string)}

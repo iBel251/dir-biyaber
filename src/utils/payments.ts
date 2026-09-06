@@ -23,6 +23,12 @@ export interface MemberReceipt {
   imageUrl?: string;
   /** Storage path, kept so the image can be deleted without parsing the download URL. */
   imagePath?: string;
+  /**
+   * What imageUrl points at. Photos uploaded with a receipt are images; the bulk scan
+   * library is PDFs, which cannot be rendered in an <img>. Absent on everything written
+   * before the scan-linking page existed, so readers must treat "missing" as 'image'.
+   */
+  fileType?: 'pdf' | 'image';
   createdAt: string;
   createdBy?: string;
   /** Set by the (not yet run) backfill so synthesised receipts stay distinguishable. */

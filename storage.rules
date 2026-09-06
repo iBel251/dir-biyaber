@@ -34,6 +34,25 @@ service firebase.storage {
       allow delete: if signedIn();
     }
 
+    // The bulk scan library: PDFs (and the occasional photo) of paper receipts, uploaded
+    // out-of-band and then attached to receipt records from the Receipt Scans page.
+    //
+    // Laid out as receiptScans/<batch>/<file> — a batch per scanning session, so a
+    // half-finished upload is visible as a short folder rather than lost among thousands
+    // of files. The {allPaths=**} wildcard is what lets the page LIST the root and each
+    // batch prefix; a per-file match would allow reads but not the listing that finds them.
+    match /receiptScans/{allPaths=**} {
+      allow read: if signedIn();
+      // 25MB: a multi-page scanned receipt is bigger than a phone photo of one.
+      allow create, update: if signedIn()
+                   && request.resource.size < 25 * 1024 * 1024
+                   && (request.resource.contentType == 'application/pdf'
+                       || request.resource.contentType.matches('image/.*'));
+      // Linking never deletes a scan — the library stays the source of truth — but the
+      // console needs this to clean up a bad upload.
+      allow delete: if signedIn();
+    }
+
     // Nothing writes anywhere else, so deny by default rather than leaving the
     // whole bucket writable to any account.
     match /{allPaths=**} {

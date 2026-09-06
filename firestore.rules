@@ -85,6 +85,11 @@ service cloud.firestore {
     match /membersListOld/{docId} { allow read, write: if isAdmin(); }
     match /payments/{docId}       { allow read, write: if isAdmin(); }
 
+    // Index of the scanned receipt documents in Storage: one doc per file, tracking
+    // whether it has been linked to a receipt, skipped, or is still waiting. It names
+    // members and receipt numbers, so it is admin-only like the records it points at.
+    match /receiptScans/{docId}   { allow read, write: if isAdmin(); }
+
     // ---- role assignments ---------------------------------------------------
     // A signed-in user may read role documents so the portal can resolve its own role;
     // only a superAdmin may hand out or revoke roles.

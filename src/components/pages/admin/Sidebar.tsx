@@ -86,6 +86,15 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarCollapsed, setSidebarCollapsed
               <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Payments</span>
             </button>
           </li>
+          <li>
+            <button 
+              onClick={() => setActiveItem('receipt-scans')}
+              className={`flex items-center w-full px-4 py-3 ${activeItem === 'receipt-scans' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'} cursor-pointer`}
+            >
+              <i className="fas fa-file-pdf w-5"></i>
+              <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Receipt Scans</span>
+            </button>
+          </li>
           {adminRole === 'superAdmin' && ( // Show only for superAdmin
             <li>
               <button
